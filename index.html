@@ -1,1 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PFCカウンター</title>
+  <style>
+    :root {
+      --red: #E60012; --green: #43B047; --blue: #2A6FD6;
+      --cream: #FFF8E7; --ink: #1A1A1A; --muted: #555555; --orange: #FF9F00;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Kaku Gothic ProN", sans-serif;
+      font-weight: 900;
+      background-image: linear-gradient(180deg, #8FCDF0 0%, #B8E0F5 60%, #FFF8E7 100%);
+      background-attachment: fixed; color: var(--ink); margin: 0; padding: 24px 16px;
+      display: flex; justify-content: center;
+    }
+    .container { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 20px; }
+    .header { background: var(--red); border: 4px solid var(--ink); border-radius: 24px; padding: 18px; text-align: center; box-shadow: 0 8px 0 var(--ink); }
+    .header h1 { font-size: 28px; color: white; margin: 0 0 6px 0; text-shadow: -2px 0 var(--ink), 2px 0 var(--ink), 0 -2px var(--ink), 0 2px var(--ink); }
+    .subtitle-pill { display: inline-block; background: var(--ink); color: white; font-size: 10px; padding: 4px 12px; border-radius: 999px; font-weight: 900; }
+    .card { background: white; border: 4px solid var(--ink); border-radius: 22px; padding: 18px; box-shadow: 0 8px 0 var(--ink); position: relative; }
+    .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .status-box { text-align: center; padding: 8px 4px; border: 3px solid var(--ink); border-radius: 16px; background: #fafafa; }
+    .status-label { font-size: 12px; font-weight: 900; margin-bottom: 2px; }
+    .status-value { font-size: 26px; font-weight: 900; }
+    .status-unit { font-size: 12px; margin-left: 1px; }
+    .sub-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .sub-box { border: 2px solid var(--ink); border-radius: 12px; padding: 6px; text-align: center; font-size: 13px; background: #fff; }
+    .sub-val { font-size: 18px; font-weight: 900; }
+    .form-group { margin-bottom: 12px; position: relative; }
+    label { font-size: 13px; font-weight: 900; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .badge { background: var(--red); color: white; font-size: 9px; border-radius: 999px; padding: 1px 6px; border: 2px solid var(--ink); }
+    input[type="text"], input[type="number"] { width: 100%; background: var(--cream); border: 3px solid var(--ink); border-radius: 12px; padding: 10px 12px; font-size: 16px; font-weight: 900; color: var(--ink); outline: none; }
+    .suggest-box { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 3px solid var(--ink); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 10; display: none; margin-top: 4px; box-shadow: 0 6px 0 rgba(0,0,0,0.15); }
+    .suggest-item { padding: 10px 12px; border-bottom: 2px solid var(--cream); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .suggest-item:active { background: var(--cream); }
+    .suggest-meta { font-size: 11px; color: var(--muted); }
+    .btn-main { width: 100%; background: var(--red); color: white; border: 4px solid var(--ink); border-radius: 18px; padding: 14px; font-size: 18px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 6px 0 var(--ink); cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn-main:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    .btn-sub { width: 100%; color: white; border: 4px solid var(--ink); padding: 12px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; border-radius: 16px; }
+    .btn-green { background: var(--green); box-shadow: 0 5px 0 var(--ink); }
+    .btn-blue { background: var(--blue); box-shadow: 0 5px 0 var(--ink); }
+    .log-list { margin-top: 10px; max-height: 150px; overflow-y: auto; }
+    .log-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 2px solid #e5e5ea; font-size: 13px; }
+    .log-values { font-weight: 900; font-size: 14px; text-align: right; }
+    .loading { text-align: center; color: var(--muted); font-size: 13px; padding: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>PFCカウンター</h1>
+      <div class="subtitle-pill" id="item-count">読み込み中...</div>
+    </div>
+
+    <div class="card">
+      <div class="status-grid">
+        <div class="status-box" style="border-color:var(--red);background:#FFF5F5;">
+          <div class="status-label" style="color:var(--red);">残りカロリー</div>
+          <div class="status-value" id="cal-remaining">2000<span class="status-unit">kcal</span></div>
+        </div>
+        <div class="status-box" style="border-color:var(--blue);background:#F5F9FF;">
+          <div class="status-label" style="color:var(--blue);">残り脂質 (F)</div>
+          <div class="status-value" id="fat-remaining">40.0<span class="status-unit">g</span></div>
+        </div>
+        <div class="status-box" style="border-color:var(--orange);background:#FFFBF2;">
+          <div class="status-label" style="color:var(--orange);">残りタンパク (P)</div>
+          <div class="status-value" id="protein-remaining">120.0<span class="status-unit">g</span></div>
+        </div>
+        <div class="status-box" style="border-color:var(--green);background:#F5FBF5;">
+          <div class="status-label" style="color:var(--green);">残り炭水化物 (C)</div>
+          <div class="status-value" id="carbs-remaining">250.0<span class="status-unit">g</span></div>
+        </div>
+      </div>
+      <div class="sub-status-grid">
+        <div class="sub-box">現在の歩数: <span class="sub-val" id="current-steps">0</span>歩</div>
+        <div class="sub-box" style="color:var(--green);">ボーナス: <span class="sub-val" id="bonus-cal">+0</span>kcal</div>
+      </div>
+    </div>
+
+    <div class="card" style="overflow:visible;">
+      <div class="form-group">
+        <label>食べたもの <span class="badge">検索</span></label>
+        <input type="text" id="food-name" placeholder="牛丼、ラーメン、うどんなど..." autocomplete="off" oninput="searchMenu(this.value)">
+        <div class="suggest-box" id="suggest-list"></div>
+      </div>
+      <div class="status-grid">
+        <div class="form-group">
+          <label>カロリー (kcal)</label>
+          <input type="number" id="food-cal" placeholder="0" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label>脂質 (g) <span class="badge">必須</span></label>
+          <input type="number" id="food-fat" placeholder="0.0" step="0.1" inputmode="decimal">
+        </div>
+      </div>
+      <div class="status-grid">
+        <div class="form-group">
+          <label>P:タンパク質(g)</label>
+          <input type="number" id="food-protein" placeholder="0.0" step="0.1" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label>C:炭水化物(g)</label>
+          <input type="number" id="food-carbs" placeholder="0.0" step="0.1" inputmode="decimal">
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <button class="btn-main" onclick="addLog()">ミッション登録！</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="form-group">
+        <label>今日の歩数をこうしん</label>
+        <div style="display:flex;gap:8px;">
+          <input type="number" id="steps-input" placeholder="例: 13500" inputmode="numeric">
+          <button class="btn-main" onclick="updateSteps()" style="width:auto;padding:10px 18px;font-size:14px;border-radius:12px;">更新</button>
+        </div>
+      </div>
+      <div class="btn-grid">
+        <button class="btn-sub btn-blue" onclick="clearLog()">ログ消去</button>
+        <button class="btn-sub btn-green" onclick="resetAll()">全リセット</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>📋 本日のミッション結果（履歴）</label>
+      <div class="log-list" id="log-container"></div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_CAL = 2000, BASE_FAT = 40, BASE_PROTEIN = 120, BASE_CARBS = 250;
+    const STEP_THRESHOLD = 12000, CAL_PER_STEP = 0.05;
+
+    let menuDatabase = [];
+    let appData = { steps: 0, logs: [] };
+
+    // ひらがな↔カタカナ変換で表記ゆれ対応
+    function toHiragana(str) {
+      return str.replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+    }
+    function normalize(str) {
+      return toHiragana(str.toLowerCase());
+    }
+
+    // data.csvを読み込む
+    async function loadCSV() {
+      try {
+        const res = await fetch('data.csv?v=' + Date.now());
+        const text = await res.text();
+        const lines = text.trim().split('\n');
+        menuDatabase = [];
+        lines.forEach(line => {
+          const parts = line.split(',');
+          if (parts.length >= 5) {
+            menuDatabase.push({
+              name: parts[0].trim(),
+              cal: parseInt(parts[1]) || 0,
+              protein: parseFloat(parts[2]) || 0,
+              fat: parseFloat(parts[3]) || 0,
+              carbs: parseFloat(parts[4]) || 0
+            });
+          }
+        });
+        document.getElementById('item-count').textContent = menuDatabase.length + ' ITEMS';
+      } catch(e) {
+        document.getElementById('item-count').textContent = 'データ読込エラー';
+      }
+    }
+
+    function searchMenu(query) {
+      const suggestBox = document.getElementById('suggest-list');
+      if (!query || query.length < 1) { suggestBox.style.display = 'none'; return; }
+      const q = normalize(query);
+      const filtered = menuDatabase.filter(item => normalize(item.name).includes(q)).slice(0, 12);
+      if (filtered.length === 0) { suggestBox.style.display = 'none'; return; }
+      suggestBox.innerHTML = '';
+      filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'suggest-item';
+        div.innerHTML = `<div>${item.name}</div><div class="suggest-meta">${item.cal}kcal / F:${item.fat}g</div>`;
+        div.onclick = () => {
+          document.getElementById('food-name').value = item.name;
+          document.getElementById('food-cal').value = item.cal;
+          document.getElementById('food-fat').value = item.fat;
+          document.getElementById('food-protein').value = item.protein;
+          document.getElementById('food-carbs').value = item.carbs;
+          suggestBox.style.display = 'none';
+        };
+        suggestBox.appendChild(div);
+      });
+      suggestBox.style.display = 'block';
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem('pfc_v8');
+      if (saved) { try { appData = JSON.parse(saved); } catch(e) {} }
+      render();
+    }
+    function saveData() { localStorage.setItem('pfc_v8', JSON.stringify(appData)); }
+
+    function render() {
+      let bonus = appData.steps > STEP_THRESHOLD ? Math.floor((appData.steps - STEP_THRESHOLD) * CAL_PER_STEP) : 0;
+      let tCal = 0, tFat = 0, tProtein = 0, tCarbs = 0;
+      appData.logs.forEach(i => { tCal += i.cal; tFat += i.fat; tProtein += i.protein; tCarbs += i.carbs; });
+      document.getElementById('cal-remaining').innerHTML = `${(BASE_CAL+bonus)-tCal}<span class="status-unit">kcal</span>`;
+      document.getElementById('fat-remaining').innerHTML = `${(BASE_FAT-tFat).toFixed(1)}<span class="status-unit">g</span>`;
+      document.getElementById('protein-remaining').innerHTML = `${(BASE_PROTEIN-tProtein).toFixed(1)}<span class="status-unit">g</span>`;
+      document.getElementById('carbs-remaining').innerHTML = `${(BASE_CARBS-tCarbs).toFixed(1)}<span class="status-unit">g</span>`;
+      document.getElementById('current-steps').innerText = appData.steps.toLocaleString();
+      document.getElementById('bonus-cal').innerText = `+${bonus}`;
+      const container = document.getElementById('log-container');
+      container.innerHTML = '';
+      if (appData.logs.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:15px 0;">ログがありません</div>';
+      } else {
+        for (let i = appData.logs.length - 1; i >= 0; i--) {
+          const item = appData.logs[i];
+          const div = document.createElement('div');
+          div.className = 'log-item';
+          div.innerHTML = `<div><b>${item.name}</b><br><small style="color:var(--muted);">${item.time}</small></div><div class="log-values">${item.cal}kcal/F:${item.fat}g<br><small style="color:var(--muted)">P:${item.protein}/C:${item.carbs}</small></div>`;
+          container.appendChild(div);
+        }
+      }
+    }
+
+    function addLog() {
+      const n = document.getElementById('food-name').value.trim();
+      const c = parseInt(document.getElementById('food-cal').value) || 0;
+      const f = parseFloat(document.getElementById('food-fat').value) || 0;
+      const p = parseFloat(document.getElementById('food-protein').value) || 0;
+      const cb = parseFloat(document.getElementById('food-carbs').value) || 0;
+      if (!n || document.getElementById('food-fat').value === '') { alert('入力内容をたしかめてね'); return; }
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+      appData.logs.push({ name: n, cal: c, fat: f, protein: p, carbs: cb, time: timeStr });
+      ['food-name','food-cal','food-fat','food-protein','food-carbs'].forEach(id => document.getElementById(id).value = '');
+      saveData(); render();
+    }
+
+    function updateSteps() {
+      const v = parseInt(document.getElementById('steps-input').value);
+      if (isNaN(v) || v < 0) { alert('正しい歩数をいれてね'); return; }
+      appData.steps = v; document.getElementById('steps-input').value = ''; saveData(); render();
+    }
+    function clearLog() { if (confirm('ログを消しますか？')) { appData.logs = []; saveData(); render(); } }
+    function resetAll() { if (confirm('リセットしますか？')) { appData.steps = 0; appData.logs = []; saveData(); render(); } }
+
+    document.addEventListener('click', e => { if (e.target.id !== 'food-name') document.getElementById('suggest-list').style.display = 'none'; });
+
+    loadCSV();
+    loadData();
+  </script>
+</body>
+</html>
 
