@@ -56,11 +56,62 @@
     .graph-tab-btn { padding: 6px 2px; border: 2px solid var(--ink); border-radius: 8px; font-size: 10px; font-weight: 900; cursor: pointer; background: #f0f0f0; text-align: center; }
     .graph-tab-btn.active { background: var(--ink); color: white; }
     .qty-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-    /* 設定モーダル */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .modal { background: white; border: 4px solid var(--ink); border-radius: 22px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 8px 0 var(--ink); max-height: 90vh; overflow-y: auto; }
     .modal h2 { font-size: 20px; margin: 0 0 16px 0; text-align: center; }
     .profile-summary { background: var(--cream); border: 2px solid var(--ink); border-radius: 12px; padding: 10px 14px; font-size: 12px; margin-bottom: 12px; line-height: 1.8; }
+
+    /* ===== 週間ビュー ===== */
+    .week-card { background: white; border: 4px solid var(--ink); border-radius: 22px; padding: 16px; box-shadow: 0 8px 0 var(--ink); overflow: hidden; }
+    .week-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .week-title { font-size: 14px; font-weight: 900; }
+    .week-nav { display: flex; gap: 8px; }
+    .week-nav-btn { background: var(--ink); color: white; border: none; border-radius: 8px; width: 32px; height: 32px; font-size: 16px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .week-nav-btn:disabled { background: #ccc; cursor: default; }
+    .week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; touch-action: pan-y; }
+    .week-day { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 2px; border-radius: 12px; transition: background 0.15s; }
+    .week-day:active { background: var(--cream); }
+    .week-day-label { font-size: 10px; font-weight: 900; color: var(--muted); }
+    .week-day-label.sun { color: var(--red); }
+    .week-day-label.sat { color: var(--blue); }
+    .week-day-circle {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900;
+      background: #f5f5f5;
+      position: relative;
+    }
+    .week-day-circle.today { background: var(--red); color: white; border-color: var(--red); box-shadow: 0 3px 0 var(--ink); }
+    .week-day-circle.has-data { background: var(--cream); }
+    .week-day-circle.today.has-data { background: var(--red); color: white; }
+    .week-day-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); border: 1px solid var(--ink); position: absolute; bottom: -1px; right: -1px; }
+    .week-day-kcal { font-size: 8px; font-weight: 900; color: var(--red); line-height: 1; }
+    .week-day-steps { font-size: 8px; font-weight: 900; color: var(--green); line-height: 1; }
+
+    /* ===== 訂正モーダル ===== */
+    .edit-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+    .edit-modal-overlay.open { display: flex; }
+    .edit-modal {
+      background: white; border: 4px solid var(--ink);
+      border-radius: 22px 22px 0 0;
+      padding: 20px; width: 100%; max-width: 440px;
+      box-shadow: 0 -6px 0 var(--ink);
+      max-height: 85vh; overflow-y: auto;
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .edit-modal-title { font-size: 16px; font-weight: 900; text-align: center; margin-bottom: 14px; }
+    .edit-steps-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
+    .edit-steps-row input { flex: 1; }
+    .edit-steps-btn { background: var(--blue); color: white; border: 3px solid var(--ink); border-radius: 12px; padding: 10px 16px; font-size: 14px; font-weight: 900; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 0 var(--ink); }
+    .edit-steps-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+    .edit-section-label { font-size: 12px; font-weight: 900; color: var(--muted); margin-bottom: 8px; border-bottom: 2px solid var(--cream); padding-bottom: 4px; }
+    .edit-log-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 2px solid #e5e5ea; font-size: 13px; }
+    .edit-log-del { background: var(--red); color: white; border: 2px solid var(--ink); border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 900; cursor: pointer; }
+    .edit-add-section { margin-top: 14px; }
+    .edit-add-section .suggest-box { position: absolute; top: 100%; left: 0; right: 0; }
+    .edit-close-btn { width: 100%; background: var(--ink); color: white; border: none; border-radius: 14px; padding: 12px; font-size: 15px; font-weight: 900; cursor: pointer; margin-top: 14px; }
   </style>
 </head>
 <body>
@@ -102,6 +153,21 @@
       <div class="sub-status-grid">
         <div class="sub-box">歩数: <span class="sub-val" id="current-steps">0</span>歩</div>
         <div class="sub-box" style="color:var(--green);">消費: <span class="sub-val" id="burn-cal">-</span>kcal</div>
+      </div>
+    </div>
+
+    <!-- 週間ビュー -->
+    <div class="week-card" id="week-card">
+      <div class="week-header">
+        <div class="week-title" id="week-title">📅 今週</div>
+        <div class="week-nav">
+          <button class="week-nav-btn" id="week-prev-btn" onclick="changeWeek(-1)">‹</button>
+          <button class="week-nav-btn" id="week-next-btn" onclick="changeWeek(1)" disabled>›</button>
+        </div>
+      </div>
+      <div class="week-days" id="week-days"
+        ontouchstart="weekSwipeStart(event)"
+        ontouchend="weekSwipeEnd(event)">
       </div>
     </div>
 
@@ -221,16 +287,65 @@
     </div>
   </div>
 
+  <!-- 訂正モーダル（下からスライド） -->
+  <div class="edit-modal-overlay" id="edit-modal-overlay" onclick="closeEditModal(event)">
+    <div class="edit-modal" id="edit-modal">
+      <div class="edit-modal-title" id="edit-modal-title">📅 訂正</div>
+
+      <!-- 歩数修正 -->
+      <div class="edit-section-label">👟 歩数の修正</div>
+      <div class="edit-steps-row">
+        <input type="number" id="edit-steps-input" placeholder="歩数を入力" inputmode="numeric">
+        <button class="edit-steps-btn" onclick="saveEditSteps()">更新</button>
+      </div>
+
+      <!-- 食事ログ一覧 -->
+      <div class="edit-section-label">🍽️ 食事ログ</div>
+      <div id="edit-log-list"></div>
+
+      <!-- 食事追加 -->
+      <div class="edit-add-section">
+        <div class="edit-section-label">➕ 食事を追加</div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <input type="text" id="edit-food-name" placeholder="食べたもの..." autocomplete="off" oninput="searchMenuEdit(this.value)">
+          <div class="suggest-box" id="edit-suggest-list"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px;">数量</label>
+            <input type="number" id="edit-food-qty" value="1" step="0.1" min="0.1" inputmode="decimal">
+          </div>
+          <div>
+            <label style="font-size:11px;">kcal</label>
+            <input type="number" id="edit-food-cal" placeholder="0" readonly style="opacity:0.7;">
+          </div>
+        </div>
+        <button class="btn-main" onclick="addEditLog()" style="font-size:15px;padding:12px;">追加する</button>
+      </div>
+
+      <button class="edit-close-btn" onclick="closeEditModalDirect()">✕ とじる</button>
+    </div>
+  </div>
+
   <script>
     let menuDatabase = [];
     let selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
+    let editSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
     let chartInstance = null;
     let currentGraph = 'cal-day';
     let allData = {};
     let profile = null;
 
+    // 週ビュー状態（0=今週、-1=先週、...、-3=3週前）
+    let weekOffset = 0;
+    let weekSwipeStartX = 0;
+
     function today() {
       const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function dateStrFromDate(d) {
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
@@ -239,7 +354,6 @@
     }
     function normalize(str) { return toHiragana(str.toLowerCase()); }
 
-    // BMRとTDEE計算（ハリス・ベネディクト式）
     function calcTargets(p) {
       let bmr;
       if (p.gender === 'male') {
@@ -248,7 +362,7 @@
         bmr = 447.593 + (9.247 * p.weight) + (3.098 * p.height) - (4.330 * p.age);
       }
       const tdee = Math.round(bmr * p.activity);
-      const targetCal = Math.round(tdee * 0.85); // 15%カット
+      const targetCal = Math.round(tdee * 0.85);
       const targetProtein = Math.round(p.weight * 2.0);
       const targetFat = Math.round(targetCal * 0.25 / 9);
       const targetCarbs = Math.round((targetCal - targetProtein * 4 - targetFat * 9) / 4);
@@ -306,6 +420,34 @@
       });
       box.style.display = 'block';
     }
+
+    function searchMenuEdit(query) {
+      const box = document.getElementById('edit-suggest-list');
+      if (!query) { box.style.display = 'none'; return; }
+      const q = normalize(query);
+      const filtered = menuDatabase.filter(i => normalize(i.name).includes(q)).slice(0, 12);
+      if (!filtered.length) { box.style.display = 'none'; return; }
+      box.innerHTML = '';
+      filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'suggest-item';
+        div.innerHTML = `<div>${item.name}</div><div class="suggest-meta">${item.cal}kcal / F:${item.fat}g</div>`;
+        div.onclick = () => {
+          document.getElementById('edit-food-name').value = item.name;
+          editSelectedBase = { cal: item.cal, fat: item.fat, protein: item.protein, carbs: item.carbs };
+          document.getElementById('edit-food-qty').value = '1';
+          document.getElementById('edit-food-cal').value = item.cal;
+          box.style.display = 'none';
+        };
+        box.appendChild(div);
+      });
+      box.style.display = 'block';
+    }
+
+    document.getElementById('edit-food-qty').addEventListener('input', () => {
+      const qty = parseFloat(document.getElementById('edit-food-qty').value) || 1;
+      document.getElementById('edit-food-cal').value = Math.round(editSelectedBase.cal * qty);
+    });
 
     function updateQty() {
       const qty = parseFloat(document.getElementById('food-qty').value) || 1;
@@ -396,6 +538,7 @@
         renderProfile();
       }
       render();
+      renderWeek();
       renderGraph(currentGraph);
     }
 
@@ -405,6 +548,11 @@
       const t = today();
       if (!allData[t]) allData[t] = { logs: [], steps: 0 };
       return allData[t];
+    }
+
+    function getDateData(dateStr) {
+      if (!allData[dateStr]) allData[dateStr] = { logs: [], steps: 0 };
+      return allData[dateStr];
     }
 
     function getTargets() {
@@ -441,6 +589,215 @@
       }
     }
 
+    // ===== 週間ビュー =====
+    function getWeekDates(offset) {
+      // offset=0: 今週(月〜日)、-1: 先週、etc
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0=日,1=月,...
+      // 月曜始まりにするため調整
+      const mondayOffset = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + mondayOffset + offset * 7);
+      monday.setHours(0,0,0,0);
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        dates.push(d);
+      }
+      return dates;
+    }
+
+    function renderWeek() {
+      const dates = getWeekDates(weekOffset);
+      const todayStr = today();
+      const dayLabels = ['月','火','水','木','金','土','日'];
+      const dayClasses = ['','','','','','sat','sun'];
+
+      // タイトル
+      const first = dates[0], last = dates[6];
+      const isSameMonth = first.getMonth() === last.getMonth();
+      let titleStr;
+      if (weekOffset === 0) {
+        titleStr = '📅 今週';
+      } else if (weekOffset === -1) {
+        titleStr = '📅 先週';
+      } else {
+        titleStr = `📅 ${Math.abs(weekOffset)}週前`;
+      }
+      document.getElementById('week-title').textContent = titleStr;
+
+      // ナビボタン
+      document.getElementById('week-prev-btn').disabled = (weekOffset <= -3);
+      document.getElementById('week-next-btn').disabled = (weekOffset >= 0);
+
+      const container = document.getElementById('week-days');
+      container.innerHTML = '';
+
+      dates.forEach((date, i) => {
+        const dateStr = dateStrFromDate(date);
+        const dayData = allData[dateStr];
+        const totalCal = dayData ? dayData.logs.reduce((s, x) => s + x.cal, 0) : 0;
+        const steps = dayData ? dayData.steps : 0;
+        const isToday = (dateStr === todayStr);
+        const hasData = dayData && (dayData.logs.length > 0 || dayData.steps > 0);
+
+        const div = document.createElement('div');
+        div.className = 'week-day';
+        div.onclick = () => openEditModal(dateStr);
+
+        const labelClass = i === 5 ? 'sat' : (i === 6 ? 'sun' : '');
+        let circleClass = 'week-day-circle';
+        if (isToday) circleClass += ' today';
+        else if (hasData) circleClass += ' has-data';
+
+        div.innerHTML = `
+          <div class="week-day-label ${labelClass}">${dayLabels[i]}</div>
+          <div class="${circleClass}">
+            ${date.getDate()}
+            ${hasData ? '<span class="week-day-dot"></span>' : ''}
+          </div>
+          <div class="week-day-kcal">${totalCal > 0 ? totalCal+'k' : ''}</div>
+          <div class="week-day-steps">${steps > 0 ? Math.round(steps/1000*10)/10+'k' : ''}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function changeWeek(dir) {
+      const next = weekOffset + dir;
+      if (next < -3 || next > 0) return;
+      weekOffset = next;
+      renderWeek();
+    }
+
+    // スワイプ
+    function weekSwipeStart(e) {
+      weekSwipeStartX = e.touches[0].clientX;
+    }
+    function weekSwipeEnd(e) {
+      const dx = e.changedTouches[0].clientX - weekSwipeStartX;
+      if (Math.abs(dx) < 40) return;
+      if (dx < 0) changeWeek(-1); // 左スワイプ → 前の週
+      else changeWeek(1);          // 右スワイプ → 次の週
+    }
+
+    // ===== 訂正モーダル =====
+    let editTargetDate = '';
+
+    function openEditModal(dateStr) {
+      editTargetDate = dateStr;
+      const d = getDateData(dateStr);
+
+      // タイトル
+      const [y, m, day] = dateStr.split('-');
+      const dateObj = new Date(parseInt(y), parseInt(m)-1, parseInt(day));
+      const dayNames = ['日','月','火','水','木','金','土'];
+      document.getElementById('edit-modal-title').textContent =
+        `📅 ${m}月${day}日（${dayNames[dateObj.getDay()]}）の訂正`;
+
+      // 歩数
+      document.getElementById('edit-steps-input').value = d.steps || '';
+
+      // ログ一覧
+      renderEditLogList(d);
+
+      // 追加フォームリセット
+      document.getElementById('edit-food-name').value = '';
+      document.getElementById('edit-food-qty').value = '1';
+      document.getElementById('edit-food-cal').value = '';
+      editSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
+      document.getElementById('edit-suggest-list').style.display = 'none';
+
+      document.getElementById('edit-modal-overlay').classList.add('open');
+    }
+
+    function renderEditLogList(d) {
+      const container = document.getElementById('edit-log-list');
+      container.innerHTML = '';
+      if (!d.logs.length) {
+        container.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0;">ログなし</div>';
+        return;
+      }
+      d.logs.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'edit-log-item';
+        div.innerHTML = `
+          <div>
+            <b style="font-size:13px;">${item.name}</b>${item.qty && item.qty !== 1 ? ` <small>×${item.qty}</small>` : ''}
+            <br><small style="color:var(--muted);">${item.cal}kcal / F:${item.fat}g / ${item.time}</small>
+          </div>
+          <button class="edit-log-del" onclick="deleteEditLog(${idx})">🗑️</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function deleteEditLog(idx) {
+      if (!confirm('このログを削除しますか？')) return;
+      const d = getDateData(editTargetDate);
+      d.logs.splice(idx, 1);
+      saveData();
+      renderEditLogList(d);
+      // 今日なら上部サマリーも更新
+      if (editTargetDate === today()) { render(); }
+      renderWeek();
+      renderGraph(currentGraph);
+    }
+
+    function saveEditSteps() {
+      const v = parseInt(document.getElementById('edit-steps-input').value);
+      if (isNaN(v) || v < 0) { alert('正しい歩数をいれてね'); return; }
+      getDateData(editTargetDate).steps = v;
+      saveData();
+      if (editTargetDate === today()) { render(); }
+      renderWeek();
+      renderGraph(currentGraph);
+      // 入力欄に保存済み反映
+      document.getElementById('edit-steps-input').value = v;
+    }
+
+    function addEditLog() {
+      const n = document.getElementById('edit-food-name').value.trim();
+      const qty = parseFloat(document.getElementById('edit-food-qty').value) || 1;
+      if (!n || !editSelectedBase.cal) { alert('食べたものを検索して選んでね'); return; }
+      const now = new Date();
+      // 過去日なら時刻は「手入力」表示
+      const isToday = (editTargetDate === today());
+      const timeStr = isToday
+        ? `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`
+        : '手入力';
+      const d = getDateData(editTargetDate);
+      d.logs.push({
+        name: n,
+        qty,
+        cal: Math.round(editSelectedBase.cal * qty),
+        fat: parseFloat((editSelectedBase.fat * qty).toFixed(1)),
+        protein: parseFloat((editSelectedBase.protein * qty).toFixed(1)),
+        carbs: parseFloat((editSelectedBase.carbs * qty).toFixed(1)),
+        time: timeStr
+      });
+      saveData();
+      renderEditLogList(d);
+      if (isToday) { render(); }
+      renderWeek();
+      renderGraph(currentGraph);
+      // フォームリセット
+      document.getElementById('edit-food-name').value = '';
+      document.getElementById('edit-food-qty').value = '1';
+      document.getElementById('edit-food-cal').value = '';
+      editSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
+    }
+
+    function closeEditModal(e) {
+      if (e.target === document.getElementById('edit-modal-overlay')) {
+        closeEditModalDirect();
+      }
+    }
+    function closeEditModalDirect() {
+      document.getElementById('edit-modal-overlay').classList.remove('open');
+    }
+
     function addLog() {
       const n = document.getElementById('food-name').value.trim();
       const qty = parseFloat(document.getElementById('food-qty').value) || 1;
@@ -456,7 +813,7 @@
       document.getElementById('food-qty').value = '1';
       ['food-cal','food-fat','food-protein','food-carbs'].forEach(id => document.getElementById(id).value = '');
       selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
-      saveData(); render(); renderGraph(currentGraph);
+      saveData(); render(); renderWeek(); renderGraph(currentGraph);
     }
 
     function updateSteps() {
@@ -464,22 +821,21 @@
       if (isNaN(v) || v < 0) { alert('正しい歩数をいれてね'); return; }
       getTodayData().steps = v;
       document.getElementById('steps-input').value = '';
-      saveData(); render(); renderGraph(currentGraph);
+      saveData(); render(); renderWeek(); renderGraph(currentGraph);
     }
 
     function clearToday() {
       if (confirm('今日のログをリセットしますか？')) {
         allData[today()] = { logs: [], steps: 0 };
-        saveData(); render(); renderGraph(currentGraph);
+        saveData(); render(); renderWeek(); renderGraph(currentGraph);
       }
     }
     function resetAll() {
       if (confirm('全データをリセットしますか？')) {
-        allData = {}; saveData(); render(); renderGraph(currentGraph);
+        allData = {}; saveData(); render(); renderWeek(); renderGraph(currentGraph);
       }
     }
 
-    // グラフ
     function switchGraph(type) {
       currentGraph = type;
       document.querySelectorAll('.graph-tab-btn').forEach((btn, i) => {
@@ -560,6 +916,7 @@
 
     document.addEventListener('click', e => {
       if (e.target.id !== 'food-name') document.getElementById('suggest-list').style.display = 'none';
+      if (e.target.id !== 'edit-food-name') document.getElementById('edit-suggest-list').style.display = 'none';
     });
 
     loadCSV();
