@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PFCカウンター</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <style>
     :root {
       --red: #E60012; --green: #43B047; --blue: #2A6FD6;
@@ -22,14 +23,15 @@
     .header h1 { font-size: 28px; color: white; margin: 0 0 6px 0; text-shadow: -2px 0 var(--ink), 2px 0 var(--ink), 0 -2px var(--ink), 0 2px var(--ink); }
     .subtitle-pill { display: inline-block; background: var(--ink); color: white; font-size: 10px; padding: 4px 12px; border-radius: 999px; font-weight: 900; }
     .card { background: white; border: 4px solid var(--ink); border-radius: 22px; padding: 18px; box-shadow: 0 8px 0 var(--ink); position: relative; }
+    .card-title { font-size: 14px; font-weight: 900; margin-bottom: 12px; }
     .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .status-box { text-align: center; padding: 8px 4px; border: 3px solid var(--ink); border-radius: 16px; background: #fafafa; }
-    .status-label { font-size: 12px; font-weight: 900; margin-bottom: 2px; }
-    .status-value { font-size: 26px; font-weight: 900; }
-    .status-unit { font-size: 12px; margin-left: 1px; }
+    .status-label { font-size: 11px; font-weight: 900; margin-bottom: 2px; }
+    .status-value { font-size: 24px; font-weight: 900; }
+    .status-unit { font-size: 11px; margin-left: 1px; }
     .sub-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    .sub-box { border: 2px solid var(--ink); border-radius: 12px; padding: 6px; text-align: center; font-size: 13px; background: #fff; }
-    .sub-val { font-size: 18px; font-weight: 900; }
+    .sub-box { border: 2px solid var(--ink); border-radius: 12px; padding: 6px; text-align: center; font-size: 12px; background: #fff; }
+    .sub-val { font-size: 16px; font-weight: 900; }
     .form-group { margin-bottom: 12px; position: relative; }
     label { font-size: 13px; font-weight: 900; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
     .badge { background: var(--red); color: white; font-size: 9px; border-radius: 999px; padding: 1px 6px; border: 2px solid var(--ink); }
@@ -44,10 +46,19 @@
     .btn-sub { width: 100%; color: white; border: 4px solid var(--ink); padding: 12px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; border-radius: 16px; }
     .btn-green { background: var(--green); box-shadow: 0 5px 0 var(--ink); }
     .btn-blue { background: var(--blue); box-shadow: 0 5px 0 var(--ink); }
-    .log-list { margin-top: 10px; max-height: 150px; overflow-y: auto; }
+    .btn-orange { background: var(--orange); box-shadow: 0 5px 0 var(--ink); }
+    .log-list { margin-top: 10px; max-height: 200px; overflow-y: auto; }
     .log-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 2px solid #e5e5ea; font-size: 13px; }
-    .log-values { font-weight: 900; font-size: 14px; text-align: right; }
-    .loading { text-align: center; color: var(--muted); font-size: 13px; padding: 10px; }
+    .log-date { font-size: 10px; color: var(--muted); font-weight: 700; padding: 4px 0; border-bottom: 2px solid var(--ink); margin-top: 6px; }
+    .log-values { font-weight: 900; font-size: 13px; text-align: right; }
+    .tab-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .tab-btn { padding: 8px; border: 3px solid var(--ink); border-radius: 12px; font-size: 12px; font-weight: 900; cursor: pointer; background: #f0f0f0; color: var(--ink); }
+    .tab-btn.active { background: var(--ink); color: white; }
+    .graph-tab-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; margin-bottom: 12px; }
+    .graph-tab-btn { padding: 6px 2px; border: 2px solid var(--ink); border-radius: 8px; font-size: 10px; font-weight: 900; cursor: pointer; background: #f0f0f0; text-align: center; }
+    .graph-tab-btn.active { background: var(--ink); color: white; }
+    canvas { width: 100% !important; }
+    .qty-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -57,62 +68,70 @@
       <div class="subtitle-pill" id="item-count">読み込み中...</div>
     </div>
 
+    <!-- 今日のサマリー -->
     <div class="card">
       <div class="status-grid">
         <div class="status-box" style="border-color:var(--red);background:#FFF5F5;">
           <div class="status-label" style="color:var(--red);">残りカロリー</div>
-          <div class="status-value" id="cal-remaining">2000<span class="status-unit">kcal</span></div>
+          <div class="status-value" id="cal-remaining">-<span class="status-unit">kcal</span></div>
         </div>
         <div class="status-box" style="border-color:var(--blue);background:#F5F9FF;">
           <div class="status-label" style="color:var(--blue);">残り脂質 (F)</div>
-          <div class="status-value" id="fat-remaining">40.0<span class="status-unit">g</span></div>
+          <div class="status-value" id="fat-remaining">-<span class="status-unit">g</span></div>
         </div>
         <div class="status-box" style="border-color:var(--orange);background:#FFFBF2;">
           <div class="status-label" style="color:var(--orange);">残りタンパク (P)</div>
-          <div class="status-value" id="protein-remaining">120.0<span class="status-unit">g</span></div>
+          <div class="status-value" id="protein-remaining">-<span class="status-unit">g</span></div>
         </div>
         <div class="status-box" style="border-color:var(--green);background:#F5FBF5;">
           <div class="status-label" style="color:var(--green);">残り炭水化物 (C)</div>
-          <div class="status-value" id="carbs-remaining">250.0<span class="status-unit">g</span></div>
+          <div class="status-value" id="carbs-remaining">-<span class="status-unit">g</span></div>
         </div>
       </div>
       <div class="sub-status-grid">
-        <div class="sub-box">現在の歩数: <span class="sub-val" id="current-steps">0</span>歩</div>
-        <div class="sub-box" style="color:var(--green);">ボーナス: <span class="sub-val" id="bonus-cal">+0</span>kcal</div>
+        <div class="sub-box">歩数: <span class="sub-val" id="current-steps">0</span>歩</div>
+        <div class="sub-box" style="color:var(--green);">消費: <span class="sub-val" id="burn-cal">2600</span>kcal</div>
       </div>
     </div>
 
+    <!-- 食事入力 -->
     <div class="card" style="overflow:visible;">
       <div class="form-group">
         <label>食べたもの <span class="badge">検索</span></label>
         <input type="text" id="food-name" placeholder="牛丼、ラーメン、うどんなど..." autocomplete="off" oninput="searchMenu(this.value)">
         <div class="suggest-box" id="suggest-list"></div>
       </div>
-      <div class="status-grid">
-        <div class="form-group">
+      <div class="qty-row">
+        <div class="form-group" style="margin-bottom:0;">
+          <label>数量 <span class="badge">倍率</span></label>
+          <input type="number" id="food-qty" value="1" step="0.1" min="0.1" inputmode="decimal">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
           <label>カロリー (kcal)</label>
-          <input type="number" id="food-cal" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="form-group">
-          <label>脂質 (g) <span class="badge">必須</span></label>
-          <input type="number" id="food-fat" placeholder="0.0" step="0.1" inputmode="decimal">
+          <input type="number" id="food-cal" placeholder="0" inputmode="numeric" readonly style="opacity:0.7;">
         </div>
       </div>
-      <div class="status-grid">
+      <div class="status-grid" style="margin-top:12px;">
         <div class="form-group">
-          <label>P:タンパク質(g)</label>
-          <input type="number" id="food-protein" placeholder="0.0" step="0.1" inputmode="decimal">
+          <label>脂質 (g)</label>
+          <input type="number" id="food-fat" placeholder="0.0" step="0.1" inputmode="decimal" readonly style="opacity:0.7;">
         </div>
         <div class="form-group">
-          <label>C:炭水化物(g)</label>
-          <input type="number" id="food-carbs" placeholder="0.0" step="0.1" inputmode="decimal">
+          <label>タンパク質 (g)</label>
+          <input type="number" id="food-protein" placeholder="0.0" step="0.1" inputmode="decimal" readonly style="opacity:0.7;">
         </div>
       </div>
-      <div style="margin-top:14px;">
+      <div class="form-group">
+        <label>炭水化物 (g)</label>
+        <input type="number" id="food-carbs" placeholder="0.0" step="0.1" inputmode="decimal" readonly style="opacity:0.7;">
+      </div>
+      <div style="margin-top:8px; font-size:11px; color:var(--muted);">※数量を変えると自動計算されます</div>
+      <div style="margin-top:12px;">
         <button class="btn-main" onclick="addLog()">ミッション登録！</button>
       </div>
     </div>
 
+    <!-- 歩数入力 -->
     <div class="card">
       <div class="form-group">
         <label>今日の歩数をこうしん</label>
@@ -122,40 +141,63 @@
         </div>
       </div>
       <div class="btn-grid">
-        <button class="btn-sub btn-blue" onclick="clearLog()">ログ消去</button>
+        <button class="btn-sub btn-blue" onclick="clearToday()">今日リセット</button>
         <button class="btn-sub btn-green" onclick="resetAll()">全リセット</button>
       </div>
     </div>
 
+    <!-- 今日のログ -->
     <div class="card">
-      <label>📋 本日のミッション結果（履歴）</label>
+      <div class="card-title">📋 本日のミッション結果</div>
       <div class="log-list" id="log-container"></div>
+    </div>
+
+    <!-- グラフ -->
+    <div class="card">
+      <div class="card-title">📊 グラフ</div>
+      <div class="graph-tab-bar">
+        <div class="graph-tab-btn active" onclick="switchGraph('cal-day')">摂取<br>日別</div>
+        <div class="graph-tab-btn" onclick="switchGraph('cal-month')">摂取<br>月別</div>
+        <div class="graph-tab-btn" onclick="switchGraph('burn-day')">消費<br>日別</div>
+        <div class="graph-tab-btn" onclick="switchGraph('burn-month')">消費<br>月別</div>
+      </div>
+      <canvas id="mainChart" height="200"></canvas>
     </div>
   </div>
 
   <script>
-    const BASE_CAL = 2000, BASE_FAT = 40, BASE_PROTEIN = 120, BASE_CARBS = 250;
-    const STEP_THRESHOLD = 12000, CAL_PER_STEP = 0.05;
+    // 設定（小松さん専用）
+    const BASE_BURN = 2600;   // 基礎＋日常活動
+    const STEP_CAL = 0.04;    // 歩数×体重補正
+    const TARGET_CAL = 2000;
+    const TARGET_FAT = 55;
+    const TARGET_PROTEIN = 135;
+    const TARGET_CARBS = 250;
 
     let menuDatabase = [];
-    let appData = { steps: 0, logs: [] };
+    let selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
+    let chartInstance = null;
+    let currentGraph = 'cal-day';
 
-    // ひらがな↔カタカナ変換で表記ゆれ対応
+    // allData = { 'YYYY-MM-DD': { logs: [...], steps: 0 } }
+    let allData = {};
+
+    function today() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
     function toHiragana(str) {
       return str.replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
     }
-    function normalize(str) {
-      return toHiragana(str.toLowerCase());
-    }
+    function normalize(str) { return toHiragana(str.toLowerCase()); }
 
-    // data.csvを読み込む
     async function loadCSV() {
       try {
         const res = await fetch('data.csv?v=' + Date.now());
         const text = await res.text();
-        const lines = text.trim().split('\n');
         menuDatabase = [];
-        lines.forEach(line => {
+        text.trim().split('\n').forEach(line => {
           const parts = line.split(',');
           if (parts.length >= 5) {
             menuDatabase.push({
@@ -174,56 +216,80 @@
     }
 
     function searchMenu(query) {
-      const suggestBox = document.getElementById('suggest-list');
-      if (!query || query.length < 1) { suggestBox.style.display = 'none'; return; }
+      const box = document.getElementById('suggest-list');
+      if (!query) { box.style.display = 'none'; return; }
       const q = normalize(query);
-      const filtered = menuDatabase.filter(item => normalize(item.name).includes(q)).slice(0, 12);
-      if (filtered.length === 0) { suggestBox.style.display = 'none'; return; }
-      suggestBox.innerHTML = '';
+      const filtered = menuDatabase.filter(i => normalize(i.name).includes(q)).slice(0, 12);
+      if (!filtered.length) { box.style.display = 'none'; return; }
+      box.innerHTML = '';
       filtered.forEach(item => {
         const div = document.createElement('div');
         div.className = 'suggest-item';
         div.innerHTML = `<div>${item.name}</div><div class="suggest-meta">${item.cal}kcal / F:${item.fat}g</div>`;
         div.onclick = () => {
           document.getElementById('food-name').value = item.name;
-          document.getElementById('food-cal').value = item.cal;
-          document.getElementById('food-fat').value = item.fat;
-          document.getElementById('food-protein').value = item.protein;
-          document.getElementById('food-carbs').value = item.carbs;
-          suggestBox.style.display = 'none';
+          selectedBase = { cal: item.cal, fat: item.fat, protein: item.protein, carbs: item.carbs };
+          document.getElementById('food-qty').value = '1';
+          updateQty();
+          box.style.display = 'none';
         };
-        suggestBox.appendChild(div);
+        box.appendChild(div);
       });
-      suggestBox.style.display = 'block';
+      box.style.display = 'block';
     }
+
+    function updateQty() {
+      const qty = parseFloat(document.getElementById('food-qty').value) || 1;
+      document.getElementById('food-cal').value = Math.round(selectedBase.cal * qty);
+      document.getElementById('food-fat').value = (selectedBase.fat * qty).toFixed(1);
+      document.getElementById('food-protein').value = (selectedBase.protein * qty).toFixed(1);
+      document.getElementById('food-carbs').value = (selectedBase.carbs * qty).toFixed(1);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('food-qty').addEventListener('input', updateQty);
+    });
 
     function loadData() {
-      const saved = localStorage.getItem('pfc_v8');
-      if (saved) { try { appData = JSON.parse(saved); } catch(e) {} }
+      const saved = localStorage.getItem('pfc_v9');
+      if (saved) { try { allData = JSON.parse(saved); } catch(e) {} }
       render();
+      renderGraph(currentGraph);
     }
-    function saveData() { localStorage.setItem('pfc_v8', JSON.stringify(appData)); }
+    function saveData() { localStorage.setItem('pfc_v9', JSON.stringify(allData)); }
+
+    function getTodayData() {
+      const t = today();
+      if (!allData[t]) allData[t] = { logs: [], steps: 0 };
+      return allData[t];
+    }
+
+    function calcBurn(steps) {
+      return Math.round(BASE_BURN + steps * STEP_CAL);
+    }
 
     function render() {
-      let bonus = appData.steps > STEP_THRESHOLD ? Math.floor((appData.steps - STEP_THRESHOLD) * CAL_PER_STEP) : 0;
+      const d = getTodayData();
       let tCal = 0, tFat = 0, tProtein = 0, tCarbs = 0;
-      appData.logs.forEach(i => { tCal += i.cal; tFat += i.fat; tProtein += i.protein; tCarbs += i.carbs; });
-      document.getElementById('cal-remaining').innerHTML = `${(BASE_CAL+bonus)-tCal}<span class="status-unit">kcal</span>`;
-      document.getElementById('fat-remaining').innerHTML = `${(BASE_FAT-tFat).toFixed(1)}<span class="status-unit">g</span>`;
-      document.getElementById('protein-remaining').innerHTML = `${(BASE_PROTEIN-tProtein).toFixed(1)}<span class="status-unit">g</span>`;
-      document.getElementById('carbs-remaining').innerHTML = `${(BASE_CARBS-tCarbs).toFixed(1)}<span class="status-unit">g</span>`;
-      document.getElementById('current-steps').innerText = appData.steps.toLocaleString();
-      document.getElementById('bonus-cal').innerText = `+${bonus}`;
+      d.logs.forEach(i => { tCal += i.cal; tFat += i.fat; tProtein += i.protein; tCarbs += i.carbs; });
+      const burn = calcBurn(d.steps);
+      document.getElementById('cal-remaining').innerHTML = `${TARGET_CAL - tCal}<span class="status-unit">kcal</span>`;
+      document.getElementById('fat-remaining').innerHTML = `${(TARGET_FAT - tFat).toFixed(1)}<span class="status-unit">g</span>`;
+      document.getElementById('protein-remaining').innerHTML = `${(TARGET_PROTEIN - tProtein).toFixed(1)}<span class="status-unit">g</span>`;
+      document.getElementById('carbs-remaining').innerHTML = `${(TARGET_CARBS - tCarbs).toFixed(1)}<span class="status-unit">g</span>`;
+      document.getElementById('current-steps').innerText = d.steps.toLocaleString();
+      document.getElementById('burn-cal').innerText = burn.toLocaleString();
+
       const container = document.getElementById('log-container');
       container.innerHTML = '';
-      if (appData.logs.length === 0) {
+      if (!d.logs.length) {
         container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:15px 0;">ログがありません</div>';
       } else {
-        for (let i = appData.logs.length - 1; i >= 0; i--) {
-          const item = appData.logs[i];
+        for (let i = d.logs.length - 1; i >= 0; i--) {
+          const item = d.logs[i];
           const div = document.createElement('div');
           div.className = 'log-item';
-          div.innerHTML = `<div><b>${item.name}</b><br><small style="color:var(--muted);">${item.time}</small></div><div class="log-values">${item.cal}kcal/F:${item.fat}g<br><small style="color:var(--muted)">P:${item.protein}/C:${item.carbs}</small></div>`;
+          div.innerHTML = `<div><b>${item.name}</b>${item.qty !== 1 ? ` <small>×${item.qty}</small>` : ''}<br><small style="color:var(--muted);">${item.time}</small></div><div class="log-values">${item.cal}kcal/F:${item.fat}g<br><small style="color:var(--muted)">P:${item.protein}/C:${item.carbs}</small></div>`;
           container.appendChild(div);
         }
       }
@@ -231,31 +297,149 @@
 
     function addLog() {
       const n = document.getElementById('food-name').value.trim();
+      const qty = parseFloat(document.getElementById('food-qty').value) || 1;
       const c = parseInt(document.getElementById('food-cal').value) || 0;
       const f = parseFloat(document.getElementById('food-fat').value) || 0;
       const p = parseFloat(document.getElementById('food-protein').value) || 0;
       const cb = parseFloat(document.getElementById('food-carbs').value) || 0;
-      if (!n || document.getElementById('food-fat').value === '') { alert('入力内容をたしかめてね'); return; }
+      if (!n) { alert('食べたものを入力してね'); return; }
       const now = new Date();
       const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-      appData.logs.push({ name: n, cal: c, fat: f, protein: p, carbs: cb, time: timeStr });
-      ['food-name','food-cal','food-fat','food-protein','food-carbs'].forEach(id => document.getElementById(id).value = '');
-      saveData(); render();
+      getTodayData().logs.push({ name: n, qty, cal: c, fat: f, protein: p, carbs: cb, time: timeStr });
+      document.getElementById('food-name').value = '';
+      document.getElementById('food-qty').value = '1';
+      ['food-cal','food-fat','food-protein','food-carbs'].forEach(id => document.getElementById(id).value = '');
+      selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
+      saveData(); render(); renderGraph(currentGraph);
     }
 
     function updateSteps() {
       const v = parseInt(document.getElementById('steps-input').value);
       if (isNaN(v) || v < 0) { alert('正しい歩数をいれてね'); return; }
-      appData.steps = v; document.getElementById('steps-input').value = ''; saveData(); render();
+      getTodayData().steps = v;
+      document.getElementById('steps-input').value = '';
+      saveData(); render(); renderGraph(currentGraph);
     }
-    function clearLog() { if (confirm('ログを消しますか？')) { appData.logs = []; saveData(); render(); } }
-    function resetAll() { if (confirm('リセットしますか？')) { appData.steps = 0; appData.logs = []; saveData(); render(); } }
 
-    document.addEventListener('click', e => { if (e.target.id !== 'food-name') document.getElementById('suggest-list').style.display = 'none'; });
+    function clearToday() {
+      if (confirm('今日のログをリセットしますか？')) {
+        allData[today()] = { logs: [], steps: 0 };
+        saveData(); render(); renderGraph(currentGraph);
+      }
+    }
+    function resetAll() {
+      if (confirm('全データをリセットしますか？')) {
+        allData = {}; saveData(); render(); renderGraph(currentGraph);
+      }
+    }
+
+    // グラフ
+    function switchGraph(type) {
+      currentGraph = type;
+      document.querySelectorAll('.graph-tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', ['cal-day','cal-month','burn-day','burn-month'][i] === type);
+      });
+      renderGraph(type);
+    }
+
+    function getLast30Days() {
+      const days = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+      }
+      return days;
+    }
+
+    function getLast6Months() {
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(); d.setMonth(d.getMonth() - i);
+        months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+      }
+      return months;
+    }
+
+    function renderGraph(type) {
+      const ctx = document.getElementById('mainChart').getContext('2d');
+      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+      let labels = [], data = [], color = '', title = '';
+
+      if (type === 'cal-day') {
+        const days = getLast30Days();
+        labels = days.map(d => d.slice(5));
+        data = days.map(d => {
+          const day = allData[d];
+          if (!day) return 0;
+          return day.logs.reduce((s, i) => s + i.cal, 0);
+        });
+        color = '#E60012'; title = '摂取カロリー（直近30日）';
+      } else if (type === 'cal-month') {
+        const months = getLast6Months();
+        labels = months.map(m => m.slice(5) + '月');
+        data = months.map(m => {
+          let total = 0;
+          Object.keys(allData).forEach(d => {
+            if (d.startsWith(m)) total += allData[d].logs.reduce((s, i) => s + i.cal, 0);
+          });
+          return total;
+        });
+        color = '#E60012'; title = '摂取カロリー（月別）';
+      } else if (type === 'burn-day') {
+        const days = getLast30Days();
+        labels = days.map(d => d.slice(5));
+        data = days.map(d => {
+          const day = allData[d];
+          return calcBurn(day ? day.steps : 0);
+        });
+        color = '#43B047'; title = '消費カロリー（直近30日）';
+      } else if (type === 'burn-month') {
+        const months = getLast6Months();
+        labels = months.map(m => m.slice(5) + '月');
+        data = months.map(m => {
+          let total = 0, count = 0;
+          Object.keys(allData).forEach(d => {
+            if (d.startsWith(m)) { total += calcBurn(allData[d].steps); count++; }
+          });
+          return count > 0 ? Math.round(total / count) : calcBurn(0);
+        });
+        color = '#43B047'; title = '消費カロリー平均（月別）';
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: title,
+            data,
+            backgroundColor: color + '99',
+            borderColor: color,
+            borderWidth: 2,
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ctx.parsed.y + 'kcal' } }
+          },
+          scales: {
+            x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+            y: { ticks: { font: { size: 10 }, callback: v => v + 'kcal' } }
+          }
+        }
+      });
+    }
+
+    document.addEventListener('click', e => {
+      if (e.target.id !== 'food-name') document.getElementById('suggest-list').style.display = 'none';
+    });
 
     loadCSV();
     loadData();
   </script>
 </body>
 </html>
-
