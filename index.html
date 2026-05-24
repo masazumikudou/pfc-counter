@@ -9,6 +9,7 @@
     :root {
       --red: #E60012; --green: #43B047; --blue: #2A6FD6;
       --cream: #FFF8E7; --ink: #1A1A1A; --muted: #555555; --orange: #FF9F00;
+      --purple: #8B5CF6;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
@@ -36,6 +37,7 @@
     label { font-size: 13px; font-weight: 900; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
     .badge { background: var(--red); color: white; font-size: 9px; border-radius: 999px; padding: 1px 6px; border: 2px solid var(--ink); }
     input[type="text"], input[type="number"] { width: 100%; background: var(--cream); border: 3px solid var(--ink); border-radius: 12px; padding: 10px 12px; font-size: 16px; font-weight: 900; color: var(--ink); outline: none; }
+    select { width: 100%; background: var(--cream); border: 3px solid var(--ink); border-radius: 12px; padding: 10px 12px; font-size: 16px; font-weight: 900; color: var(--ink); outline: none; appearance: none; }
     .suggest-box { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 3px solid var(--ink); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 10; display: none; margin-top: 4px; box-shadow: 0 6px 0 rgba(0,0,0,0.15); }
     .suggest-item { padding: 10px 12px; border-bottom: 2px solid var(--cream); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
     .suggest-item:active { background: var(--cream); }
@@ -46,19 +48,19 @@
     .btn-sub { width: 100%; color: white; border: 4px solid var(--ink); padding: 12px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; border-radius: 16px; }
     .btn-green { background: var(--green); box-shadow: 0 5px 0 var(--ink); }
     .btn-blue { background: var(--blue); box-shadow: 0 5px 0 var(--ink); }
-    .btn-orange { background: var(--orange); box-shadow: 0 5px 0 var(--ink); }
+    .btn-purple { background: var(--purple); box-shadow: 0 5px 0 var(--ink); }
     .log-list { margin-top: 10px; max-height: 200px; overflow-y: auto; }
     .log-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 2px solid #e5e5ea; font-size: 13px; }
-    .log-date { font-size: 10px; color: var(--muted); font-weight: 700; padding: 4px 0; border-bottom: 2px solid var(--ink); margin-top: 6px; }
     .log-values { font-weight: 900; font-size: 13px; text-align: right; }
-    .tab-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .tab-btn { padding: 8px; border: 3px solid var(--ink); border-radius: 12px; font-size: 12px; font-weight: 900; cursor: pointer; background: #f0f0f0; color: var(--ink); }
-    .tab-btn.active { background: var(--ink); color: white; }
     .graph-tab-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; margin-bottom: 12px; }
     .graph-tab-btn { padding: 6px 2px; border: 2px solid var(--ink); border-radius: 8px; font-size: 10px; font-weight: 900; cursor: pointer; background: #f0f0f0; text-align: center; }
     .graph-tab-btn.active { background: var(--ink); color: white; }
-    canvas { width: 100% !important; }
     .qty-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    /* 設定モーダル */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: white; border: 4px solid var(--ink); border-radius: 22px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 8px 0 var(--ink); max-height: 90vh; overflow-y: auto; }
+    .modal h2 { font-size: 20px; margin: 0 0 16px 0; text-align: center; }
+    .profile-summary { background: var(--cream); border: 2px solid var(--ink); border-radius: 12px; padding: 10px 14px; font-size: 12px; margin-bottom: 12px; line-height: 1.8; }
   </style>
 </head>
 <body>
@@ -66,6 +68,15 @@
     <div class="header">
       <h1>PFCカウンター</h1>
       <div class="subtitle-pill" id="item-count">読み込み中...</div>
+    </div>
+
+    <!-- プロフィールサマリー -->
+    <div class="card" id="profile-card" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-title" style="margin:0;" id="profile-name">－</div>
+        <button class="btn-sub btn-purple" onclick="openSettings()" style="width:auto;padding:6px 14px;font-size:12px;">⚙️ 設定</button>
+      </div>
+      <div class="profile-summary" id="profile-summary"></div>
     </div>
 
     <!-- 今日のサマリー -->
@@ -90,7 +101,7 @@
       </div>
       <div class="sub-status-grid">
         <div class="sub-box">歩数: <span class="sub-val" id="current-steps">0</span>歩</div>
-        <div class="sub-box" style="color:var(--green);">消費: <span class="sub-val" id="burn-cal">2600</span>kcal</div>
+        <div class="sub-box" style="color:var(--green);">消費: <span class="sub-val" id="burn-cal">-</span>kcal</div>
       </div>
     </div>
 
@@ -165,22 +176,58 @@
     </div>
   </div>
 
-  <script>
-    // 設定（小松さん専用）
-    const BASE_BURN = 2600;   // 基礎＋日常活動
-    const STEP_CAL = 0.04;    // 歩数×体重補正
-    const TARGET_CAL = 2000;
-    const TARGET_FAT = 55;
-    const TARGET_PROTEIN = 135;
-    const TARGET_CARBS = 250;
+  <!-- 設定モーダル -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+      <h2>⚙️ プロフィール設定</h2>
+      <div class="form-group">
+        <label>お名前</label>
+        <input type="text" id="s-name" placeholder="例: 小松">
+      </div>
+      <div class="status-grid">
+        <div class="form-group">
+          <label>身長 (cm)</label>
+          <input type="number" id="s-height" placeholder="176" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label>体重 (kg)</label>
+          <input type="number" id="s-weight" placeholder="68" inputmode="decimal" step="0.1">
+        </div>
+      </div>
+      <div class="status-grid">
+        <div class="form-group">
+          <label>年齢</label>
+          <input type="number" id="s-age" placeholder="40" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label>性別</label>
+          <select id="s-gender">
+            <option value="male">男性</option>
+            <option value="female">女性</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>活動レベル</label>
+        <select id="s-activity">
+          <option value="1.2">低い（デスクワーク中心）</option>
+          <option value="1.55" selected>中程度（週数回運動）</option>
+          <option value="1.725">高い（週5以上運動）</option>
+          <option value="1.9">非常に高い（毎日激しい運動）</option>
+        </select>
+      </div>
+      <div id="calc-preview" style="background:var(--cream);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-size:12px;margin-bottom:16px;line-height:2;display:none;"></div>
+      <button class="btn-main" onclick="saveSettings()" style="margin-bottom:8px;">保存する</button>
+    </div>
+  </div>
 
+  <script>
     let menuDatabase = [];
     let selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
     let chartInstance = null;
     let currentGraph = 'cal-day';
-
-    // allData = { 'YYYY-MM-DD': { logs: [...], steps: 0 } }
     let allData = {};
+    let profile = null;
 
     function today() {
       const d = new Date();
@@ -191,6 +238,28 @@
       return str.replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
     }
     function normalize(str) { return toHiragana(str.toLowerCase()); }
+
+    // BMRとTDEE計算（ハリス・ベネディクト式）
+    function calcTargets(p) {
+      let bmr;
+      if (p.gender === 'male') {
+        bmr = 88.362 + (13.397 * p.weight) + (4.799 * p.height) - (5.677 * p.age);
+      } else {
+        bmr = 447.593 + (9.247 * p.weight) + (3.098 * p.height) - (4.330 * p.age);
+      }
+      const tdee = Math.round(bmr * p.activity);
+      const targetCal = Math.round(tdee * 0.85); // 15%カット
+      const targetProtein = Math.round(p.weight * 2.0);
+      const targetFat = Math.round(targetCal * 0.25 / 9);
+      const targetCarbs = Math.round((targetCal - targetProtein * 4 - targetFat * 9) / 4);
+      return { bmr: Math.round(bmr), tdee, targetCal, targetProtein, targetFat, targetCarbs };
+    }
+
+    function calcBurn(steps, p) {
+      if (!p) return 2600;
+      const t = calcTargets(p);
+      return Math.round(t.tdee + steps * 0.04 * (p.weight / 68));
+    }
 
     async function loadCSV() {
       try {
@@ -246,16 +315,90 @@
       document.getElementById('food-carbs').value = (selectedBase.carbs * qty).toFixed(1);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('food-qty').addEventListener('input', updateQty);
+    document.getElementById('food-qty').addEventListener('input', updateQty);
+
+    // 設定
+    function openSettings() {
+      if (profile) {
+        document.getElementById('s-name').value = profile.name || '';
+        document.getElementById('s-height').value = profile.height || '';
+        document.getElementById('s-weight').value = profile.weight || '';
+        document.getElementById('s-age').value = profile.age || '';
+        document.getElementById('s-gender').value = profile.gender || 'male';
+        document.getElementById('s-activity').value = profile.activity || '1.55';
+      }
+      document.getElementById('settings-modal').style.display = 'flex';
+      updateCalcPreview();
+    }
+
+    function updateCalcPreview() {
+      const h = parseFloat(document.getElementById('s-height').value);
+      const w = parseFloat(document.getElementById('s-weight').value);
+      const a = parseInt(document.getElementById('s-age').value);
+      const g = document.getElementById('s-gender').value;
+      const act = parseFloat(document.getElementById('s-activity').value);
+      const preview = document.getElementById('calc-preview');
+      if (h && w && a) {
+        const t = calcTargets({ height: h, weight: w, age: a, gender: g, activity: act });
+        preview.style.display = 'block';
+        preview.innerHTML = `基礎代謝: <b>${t.bmr}kcal</b> / 消費目安: <b>${t.tdee}kcal</b><br>摂取目標: <b>${t.targetCal}kcal</b>（15%カット）<br>P: <b>${t.targetProtein}g</b> / F: <b>${t.targetFat}g</b> / C: <b>${t.targetCarbs}g</b>`;
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    ['s-height','s-weight','s-age','s-gender','s-activity'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateCalcPreview);
     });
 
-    function loadData() {
-      const saved = localStorage.getItem('pfc_v9');
-      if (saved) { try { allData = JSON.parse(saved); } catch(e) {} }
+    function saveSettings() {
+      const name = document.getElementById('s-name').value.trim();
+      const height = parseFloat(document.getElementById('s-height').value);
+      const weight = parseFloat(document.getElementById('s-weight').value);
+      const age = parseInt(document.getElementById('s-age').value);
+      const gender = document.getElementById('s-gender').value;
+      const activity = parseFloat(document.getElementById('s-activity').value);
+      if (!height || !weight || !age) { alert('身長・体重・年齢を入力してください'); return; }
+      profile = { name, height, weight, age, gender, activity };
+      localStorage.setItem('pfc_profile', JSON.stringify(profile));
+      document.getElementById('settings-modal').style.display = 'none';
+      renderProfile();
       render();
       renderGraph(currentGraph);
     }
+
+    function renderProfile() {
+      if (!profile) {
+        document.getElementById('profile-card').style.display = 'none';
+        return;
+      }
+      document.getElementById('profile-card').style.display = 'block';
+      const t = calcTargets(profile);
+      const actLabel = { '1.2': '低い', '1.55': '中程度', '1.725': '高い', '1.9': '非常に高い' };
+      document.getElementById('profile-name').textContent = `👤 ${profile.name || 'プロフィール'}`;
+      document.getElementById('profile-summary').innerHTML =
+        `${profile.height}cm / ${profile.weight}kg / ${profile.age}歳 / ${profile.gender === 'male' ? '男性' : '女性'} / 活動: ${actLabel[String(profile.activity)] || '中程度'}<br>` +
+        `目標: ${t.targetCal}kcal / P:${t.targetProtein}g / F:${t.targetFat}g / C:${t.targetCarbs}g`;
+    }
+
+    function loadData() {
+      const savedProfile = localStorage.getItem('pfc_profile');
+      if (savedProfile) {
+        try { profile = JSON.parse(savedProfile); } catch(e) {}
+      }
+      const saved = localStorage.getItem('pfc_v9');
+      if (saved) { try { allData = JSON.parse(saved); } catch(e) {} }
+
+      if (!profile) {
+        document.getElementById('settings-modal').style.display = 'flex';
+      } else {
+        document.getElementById('settings-modal').style.display = 'none';
+        renderProfile();
+      }
+      render();
+      renderGraph(currentGraph);
+    }
+
     function saveData() { localStorage.setItem('pfc_v9', JSON.stringify(allData)); }
 
     function getTodayData() {
@@ -264,19 +407,22 @@
       return allData[t];
     }
 
-    function calcBurn(steps) {
-      return Math.round(BASE_BURN + steps * STEP_CAL);
+    function getTargets() {
+      if (profile) return calcTargets(profile);
+      return { targetCal: 2000, targetFat: 55, targetProtein: 135, targetCarbs: 250, tdee: 2600 };
     }
 
     function render() {
       const d = getTodayData();
+      const targets = getTargets();
       let tCal = 0, tFat = 0, tProtein = 0, tCarbs = 0;
       d.logs.forEach(i => { tCal += i.cal; tFat += i.fat; tProtein += i.protein; tCarbs += i.carbs; });
-      const burn = calcBurn(d.steps);
-      document.getElementById('cal-remaining').innerHTML = `${TARGET_CAL - tCal}<span class="status-unit">kcal</span>`;
-      document.getElementById('fat-remaining').innerHTML = `${(TARGET_FAT - tFat).toFixed(1)}<span class="status-unit">g</span>`;
-      document.getElementById('protein-remaining').innerHTML = `${(TARGET_PROTEIN - tProtein).toFixed(1)}<span class="status-unit">g</span>`;
-      document.getElementById('carbs-remaining').innerHTML = `${(TARGET_CARBS - tCarbs).toFixed(1)}<span class="status-unit">g</span>`;
+      const burn = calcBurn(d.steps, profile);
+
+      document.getElementById('cal-remaining').innerHTML = `${targets.targetCal - tCal}<span class="status-unit">kcal</span>`;
+      document.getElementById('fat-remaining').innerHTML = `${(targets.targetFat - tFat).toFixed(1)}<span class="status-unit">g</span>`;
+      document.getElementById('protein-remaining').innerHTML = `${(targets.targetProtein - tProtein).toFixed(1)}<span class="status-unit">g</span>`;
+      document.getElementById('carbs-remaining').innerHTML = `${(targets.targetCarbs - tCarbs).toFixed(1)}<span class="status-unit">g</span>`;
       document.getElementById('current-steps').innerText = d.steps.toLocaleString();
       document.getElementById('burn-cal').innerText = burn.toLocaleString();
 
@@ -289,7 +435,7 @@
           const item = d.logs[i];
           const div = document.createElement('div');
           div.className = 'log-item';
-          div.innerHTML = `<div><b>${item.name}</b>${item.qty !== 1 ? ` <small>×${item.qty}</small>` : ''}<br><small style="color:var(--muted);">${item.time}</small></div><div class="log-values">${item.cal}kcal/F:${item.fat}g<br><small style="color:var(--muted)">P:${item.protein}/C:${item.carbs}</small></div>`;
+          div.innerHTML = `<div><b>${item.name}</b>${item.qty && item.qty !== 1 ? ` <small>×${item.qty}</small>` : ''}<br><small style="color:var(--muted);">${item.time}</small></div><div class="log-values">${item.cal}kcal/F:${item.fat}g<br><small style="color:var(--muted)">P:${item.protein}/C:${item.carbs}</small></div>`;
           container.appendChild(div);
         }
       }
@@ -363,46 +509,34 @@
     function renderGraph(type) {
       const ctx = document.getElementById('mainChart').getContext('2d');
       if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-
       let labels = [], data = [], color = '', title = '';
 
       if (type === 'cal-day') {
         const days = getLast30Days();
         labels = days.map(d => d.slice(5));
-        data = days.map(d => {
-          const day = allData[d];
-          if (!day) return 0;
-          return day.logs.reduce((s, i) => s + i.cal, 0);
-        });
+        data = days.map(d => { const day = allData[d]; return day ? day.logs.reduce((s, i) => s + i.cal, 0) : 0; });
         color = '#E60012'; title = '摂取カロリー（直近30日）';
       } else if (type === 'cal-month') {
         const months = getLast6Months();
         labels = months.map(m => m.slice(5) + '月');
         data = months.map(m => {
           let total = 0;
-          Object.keys(allData).forEach(d => {
-            if (d.startsWith(m)) total += allData[d].logs.reduce((s, i) => s + i.cal, 0);
-          });
+          Object.keys(allData).forEach(d => { if (d.startsWith(m)) total += allData[d].logs.reduce((s, i) => s + i.cal, 0); });
           return total;
         });
         color = '#E60012'; title = '摂取カロリー（月別）';
       } else if (type === 'burn-day') {
         const days = getLast30Days();
         labels = days.map(d => d.slice(5));
-        data = days.map(d => {
-          const day = allData[d];
-          return calcBurn(day ? day.steps : 0);
-        });
+        data = days.map(d => { const day = allData[d]; return calcBurn(day ? day.steps : 0, profile); });
         color = '#43B047'; title = '消費カロリー（直近30日）';
       } else if (type === 'burn-month') {
         const months = getLast6Months();
         labels = months.map(m => m.slice(5) + '月');
         data = months.map(m => {
           let total = 0, count = 0;
-          Object.keys(allData).forEach(d => {
-            if (d.startsWith(m)) { total += calcBurn(allData[d].steps); count++; }
-          });
-          return count > 0 ? Math.round(total / count) : calcBurn(0);
+          Object.keys(allData).forEach(d => { if (d.startsWith(m)) { total += calcBurn(allData[d].steps, profile); count++; } });
+          return count > 0 ? Math.round(total / count) : calcBurn(0, profile);
         });
         color = '#43B047'; title = '消費カロリー平均（月別）';
       }
@@ -411,21 +545,11 @@
         type: 'bar',
         data: {
           labels,
-          datasets: [{
-            label: title,
-            data,
-            backgroundColor: color + '99',
-            borderColor: color,
-            borderWidth: 2,
-            borderRadius: 4,
-          }]
+          datasets: [{ label: title, data, backgroundColor: color + '99', borderColor: color, borderWidth: 2, borderRadius: 4 }]
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => ctx.parsed.y + 'kcal' } }
-          },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + 'kcal' } } },
           scales: {
             x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
             y: { ticks: { font: { size: 10 }, callback: v => v + 'kcal' } }
