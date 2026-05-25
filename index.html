@@ -332,6 +332,19 @@
     </div>
     <canvas id="mainChart" height="200"></canvas>
   </div>
+
+  <!-- バックアップ・リストア -->
+  <div class="card">
+    <div class="card-title">💾 バックアップ・リストア</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">データをJSONファイルに書き出し・読み込みできます。機種変時の移行にご利用ください。</div>
+    <div class="btn-grid">
+      <button class="btn-sub btn-blue" onclick="exportData()">💾 バックアップ</button>
+      <button class="btn-sub btn-green" onclick="document.getElementById('import-file').click()">📂 リストア</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
+    <div class="inline-error" id="import-error"></div>
+    <div id="import-success" style="color:var(--green);font-size:12px;font-weight:900;margin-top:6px;display:none;">✅ リストア完了！</div>
+  </div>
 </div>
 
 <!-- ==============================
@@ -1180,6 +1193,72 @@
     if (e.target.id !== 'food-name') document.getElementById('suggest-list').style.display = 'none';
     if (e.target.id !== 'edit-food-name') document.getElementById('edit-suggest-list').style.display = 'none';
   });
+
+// ==============================
+// SECTION 8: JS - バックアップ・リストア
+// 変更箇所: エクスポート・インポート処理
+// 目安行数: ~40行
+// ==============================
+
+  // バックアップ（JSONエクスポート）
+  function exportData() {
+    const backup = {
+      version: 'pfc_v9',
+      exportedAt: new Date().toISOString(),
+      profile: profile,
+      logs: allData,
+      weightLog: weightLog
+    };
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = dateStrFromDate(new Date());
+    a.href = url;
+    a.download = `pfc-backup-${date}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // リストア（JSONインポート）
+  function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const backup = JSON.parse(e.target.result);
+        if (!backup.version || !backup.logs) {
+          showError('import-error', '❌ ファイルが正しくありません');
+          return;
+        }
+        if (backup.profile) {
+          profile = backup.profile;
+          localStorage.setItem('pfc_profile', JSON.stringify(profile));
+        }
+        if (backup.logs) {
+          allData = backup.logs;
+          saveData();
+        }
+        if (backup.weightLog) {
+          weightLog = backup.weightLog;
+          localStorage.setItem('pfc_weight', JSON.stringify(weightLog));
+        }
+        hideError('import-error');
+        const success = document.getElementById('import-success');
+        success.style.display = 'block';
+        setTimeout(() => { success.style.display = 'none'; }, 3000);
+        renderProfile();
+        render();
+        renderWeek();
+        renderGraph(currentGraph);
+      } catch(err) {
+        showError('import-error', '❌ 読み込みに失敗しました');
+      }
+      event.target.value = '';
+    };
+    reader.readAsText(file);
+  }
 
   // 初期化
   loadCSV();
