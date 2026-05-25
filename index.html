@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PFCカウンター</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<!-- ==============================
+     SECTION 1: CSS
+     変更箇所: デザイン・レイアウト・色・アニメーション
+     目安行数: ~320行
+============================== -->
   <style>
     :root {
       --red: #E60012; --green: #43B047; --blue: #2A6FD6;
@@ -31,8 +37,11 @@
     .header-date-label { color: white; font-size: 13px; font-weight: 900; text-shadow: -1px 0 var(--ink), 1px 0 var(--ink), 0 -1px var(--ink), 0 1px var(--ink); }
     .subtitle-pill { display: inline-block; background: var(--ink); color: white; font-size: 10px; padding: 4px 12px; border-radius: 999px; font-weight: 900; }
 
+    /* カード共通 */
     .card { background: white; border: 4px solid var(--ink); border-radius: 22px; padding: 18px; box-shadow: 0 8px 0 var(--ink); position: relative; }
     .card-title { font-size: 14px; font-weight: 900; margin-bottom: 12px; }
+
+    /* サマリーグリッド */
     .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .status-box { text-align: center; padding: 8px 4px; border: 3px solid var(--ink); border-radius: 16px; background: #fafafa; }
     .status-label { font-size: 11px; font-weight: 900; margin-bottom: 2px; }
@@ -41,15 +50,21 @@
     .sub-status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
     .sub-box { border: 2px solid var(--ink); border-radius: 12px; padding: 6px; text-align: center; font-size: 11px; background: #fff; }
     .sub-val { font-size: 15px; font-weight: 900; }
+
+    /* フォーム */
     .form-group { margin-bottom: 12px; position: relative; }
     label { font-size: 13px; font-weight: 900; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
     .badge { background: var(--red); color: white; font-size: 9px; border-radius: 999px; padding: 1px 6px; border: 2px solid var(--ink); }
     input[type="text"], input[type="number"] { width: 100%; background: var(--cream); border: 3px solid var(--ink); border-radius: 12px; padding: 10px 12px; font-size: 16px; font-weight: 900; color: var(--ink); outline: none; }
     select { width: 100%; background: var(--cream); border: 3px solid var(--ink); border-radius: 12px; padding: 10px 12px; font-size: 16px; font-weight: 900; color: var(--ink); outline: none; appearance: none; }
+
+    /* サジェスト */
     .suggest-box { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 3px solid var(--ink); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 10; display: none; margin-top: 4px; box-shadow: 0 6px 0 rgba(0,0,0,0.15); }
     .suggest-item { padding: 10px 12px; border-bottom: 2px solid var(--cream); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
     .suggest-item:active { background: var(--cream); }
     .suggest-meta { font-size: 11px; color: var(--muted); }
+
+    /* ボタン */
     .btn-main { width: 100%; background: var(--red); color: white; border: 4px solid var(--ink); border-radius: 18px; padding: 14px; font-size: 18px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 6px 0 var(--ink); cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
     .btn-main:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
@@ -57,14 +72,22 @@
     .btn-green { background: var(--green); box-shadow: 0 5px 0 var(--ink); }
     .btn-blue { background: var(--blue); box-shadow: 0 5px 0 var(--ink); }
     .btn-purple { background: var(--purple); box-shadow: 0 5px 0 var(--ink); }
+
+    /* ログリスト */
     .log-list { margin-top: 10px; max-height: 200px; overflow-y: auto; }
     .log-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 2px solid #e5e5ea; font-size: 13px; }
     .log-values { font-weight: 900; font-size: 13px; text-align: right; }
     .log-del-btn { background: var(--red); color: white; border: 2px solid var(--ink); border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 900; cursor: pointer; margin-left: 8px; flex-shrink: 0; }
+
+    /* グラフタブ */
     .graph-tab-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-bottom: 12px; }
     .graph-tab-btn { padding: 6px 2px; border: 2px solid var(--ink); border-radius: 8px; font-size: 9px; font-weight: 900; cursor: pointer; background: #f0f0f0; text-align: center; }
     .graph-tab-btn.active { background: var(--ink); color: white; }
+
+    /* 数量行 */
     .qty-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+    /* インラインエラー */
     .inline-error { color: var(--red); font-size: 12px; font-weight: 900; margin-top: 6px; display: none; }
     .inline-error.show { display: block; }
 
@@ -141,6 +164,12 @@
 </head>
 <body>
 <div class="container">
+
+<!-- ==============================
+     SECTION 2: HTML - メイン画面
+     変更箇所: 画面レイアウト・カード構成・表示項目
+     目安行数: ~150行
+============================== -->
 
   <!-- ヘッダー -->
   <div class="header">
@@ -305,6 +334,12 @@
   </div>
 </div>
 
+<!-- ==============================
+     SECTION 3: HTML - モーダル
+     変更箇所: 設定画面・訂正モーダルのUI
+     目安行数: ~80行
+============================== -->
+
 <!-- 設定モーダル -->
 <div class="modal-overlay" id="settings-modal">
   <div class="modal">
@@ -390,6 +425,12 @@
 </div>
 
 <script>
+// ==============================
+// SECTION 4: JS - コア
+// 変更箇所: 変数定義・日付ユーティリティ・PFC計算・CSV読み込み・食品検索
+// 目安行数: ~100行
+// ==============================
+
   let menuDatabase = [];
   let selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
   let editSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
@@ -402,7 +443,7 @@
   let weekSwipeStartX = 0;
   let viewDateOffset = 0; // 0=今日, -1=昨日...
 
-  // ===== 日付ユーティリティ =====
+  // 日付ユーティリティ
   function today() {
     const d = new Date();
     return dateStrFromDate(d);
@@ -420,7 +461,7 @@
   }
   function normalize(str) { return toHiragana(str.toLowerCase()); }
 
-  // ===== 計算 =====
+  // PFC計算（ハリス・ベネディクト式）
   function calcTargets(p) {
     let bmr;
     if (p.gender === 'male') {
@@ -445,7 +486,7 @@
     return t.tdee + calcWalkBurn(steps, p);
   }
 
-  // ===== CSV読み込み =====
+  // CSV読み込み
   async function loadCSV() {
     try {
       const res = await fetch('data.csv?v=' + Date.now());
@@ -469,7 +510,7 @@
     }
   }
 
-  // ===== 検索 =====
+  // 食品検索（メイン画面）
   function searchMenu(query) {
     const box = document.getElementById('suggest-list');
     if (!query) { box.style.display = 'none'; return; }
@@ -494,6 +535,7 @@
     box.style.display = 'block';
   }
 
+  // 食品検索（訂正モーダル）
   function searchMenuEdit(query) {
     const box = document.getElementById('edit-suggest-list');
     if (!query) { box.style.display = 'none'; return; }
@@ -518,11 +560,11 @@
     box.style.display = 'block';
   }
 
+  // 数量変更 → 自動計算
   document.getElementById('edit-food-qty').addEventListener('input', () => {
     const qty = parseFloat(document.getElementById('edit-food-qty').value) || 1;
     document.getElementById('edit-food-cal').value = Math.round(editSelectedBase.cal * qty);
   });
-
   function updateQty() {
     const qty = parseFloat(document.getElementById('food-qty').value) || 1;
     document.getElementById('food-cal').value = Math.round(selectedBase.cal * qty);
@@ -532,7 +574,7 @@
   }
   document.getElementById('food-qty').addEventListener('input', updateQty);
 
-  // ===== インラインエラー =====
+  // インラインエラー
   function showError(id, msg) {
     const el = document.getElementById(id);
     if (msg) el.textContent = msg;
@@ -542,7 +584,13 @@
     document.getElementById(id).classList.remove('show');
   }
 
-  // ===== 設定 =====
+// ==============================
+// SECTION 5: JS - プロフィール・体重・データ管理
+// 変更箇所: 設定保存・体重登録・localStorage操作
+// 目安行数: ~100行
+// ==============================
+
+  // 設定モーダル開閉・保存
   function openSettings() {
     if (profile) {
       document.getElementById('s-name').value = profile.name || '';
@@ -592,7 +640,7 @@
     renderGraph(currentGraph);
   }
 
-  // ===== プロフィール表示 =====
+  // プロフィール表示
   function renderProfile() {
     if (!profile) {
       document.getElementById('profile-card').style.display = 'none';
@@ -610,7 +658,7 @@
     renderWeightCard();
   }
 
-  // ===== 体重カード =====
+  // 体重カード
   function renderWeightCard() {
     if (!profile) return;
     const latest = weightLog.length ? weightLog[weightLog.length - 1].weight : null;
@@ -628,13 +676,11 @@
       document.getElementById('weight-diff').innerHTML = `－<span class="weight-box-unit">kg</span>`;
     }
   }
-
   function registerWeight() {
     const v = parseFloat(document.getElementById('weight-input').value);
     if (isNaN(v) || v < 20 || v > 300) { showError('weight-error', '正しい体重を入力してください'); return; }
     hideError('weight-error');
     const dateStr = today();
-    // 同じ日の記録があれば上書き
     const idx = weightLog.findIndex(w => w.date === dateStr);
     if (idx >= 0) weightLog[idx].weight = v;
     else weightLog.push({ date: dateStr, weight: v });
@@ -645,7 +691,8 @@
     renderGraph(currentGraph);
   }
 
-  // ===== データ管理 =====
+  // データ管理（localStorage）
+  // キー: pfc_v9（食事ログ）/ pfc_profile（プロフィール）/ pfc_weight（体重ログ）
   function loadData() {
     const savedProfile = localStorage.getItem('pfc_profile');
     if (savedProfile) { try { profile = JSON.parse(savedProfile); } catch(e) {} }
@@ -678,7 +725,13 @@
     return { targetCal: 2000, targetFat: 55, targetProtein: 135, targetCarbs: 250, tdee: 2600 };
   }
 
-  // ===== ヘッダー日付ナビ =====
+// ==============================
+// SECTION 6: JS - UI（レンダリング・食事・歩数・週間ビュー・訂正モーダル）
+// 変更箇所: 画面描画・ログ操作・週間ビュー・訂正機能
+// 目安行数: ~200行
+// ==============================
+
+  // ヘッダー日付ナビ
   function updateHeaderDate() {
     const d = new Date();
     d.setDate(d.getDate() + viewDateOffset);
@@ -689,26 +742,21 @@
     document.getElementById('header-date-label').textContent = label;
     document.getElementById('date-next-btn').disabled = viewDateOffset >= 0;
     document.getElementById('date-prev-btn').disabled = viewDateOffset <= -30;
-    // ログタイトル更新
     document.getElementById('log-card-title').textContent =
       viewDateOffset === 0 ? '📋 本日のミッション結果' : `📋 ${d.getMonth()+1}/${d.getDate()} の記録`;
   }
-
   function changeViewDate(dir) {
     const next = viewDateOffset + dir;
     if (next > 0 || next < -30) return;
     viewDateOffset = next;
     updateHeaderDate();
-    // 週間ビューも追従（表示中の週に該当日がなければ週をシフト）
     syncWeekToViewDate();
     render();
   }
-
   function syncWeekToViewDate() {
     const vd = new Date();
     vd.setDate(vd.getDate() + viewDateOffset);
     const td = new Date();
-    // 表示日が含まれる週のoffsetを計算
     const diffDays = Math.floor((td - vd) / (1000*60*60*24));
     const targetWeekOffset = -Math.floor(diffDays / 7);
     if (targetWeekOffset !== weekOffset && targetWeekOffset >= -3 && targetWeekOffset <= 0) {
@@ -717,7 +765,7 @@
     renderWeek();
   }
 
-  // ===== メインレンダリング =====
+  // メインレンダリング（サマリー＋ログ一覧）
   function render() {
     const d = getViewData();
     const targets = getTargets();
@@ -756,14 +804,13 @@
       }
     }
   }
-
   function deleteLogItem(idx) {
     const d = getViewData();
     d.logs.splice(idx, 1);
     saveData(); render(); renderWeek(); renderGraph(currentGraph);
   }
 
-  // ===== 食事登録 =====
+  // 食事登録
   function addLog() {
     const n = document.getElementById('food-name').value.trim();
     if (!n) { showError('food-error', '食べたものを入力してください'); return; }
@@ -776,7 +823,6 @@
     const cb = parseFloat(document.getElementById('food-carbs').value) || 0;
     const now = new Date();
     const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-    // 表示中の日付に登録
     getViewData().logs.push({ name: n, qty, cal: c, fat: f, protein: p, carbs: cb, time: timeStr });
     document.getElementById('food-name').value = '';
     document.getElementById('food-qty').value = '1';
@@ -785,7 +831,7 @@
     saveData(); render(); renderWeek(); renderGraph(currentGraph);
   }
 
-  // ===== 歩数登録 =====
+  // 歩数登録
   function updateSteps() {
     const v = parseInt(document.getElementById('steps-input').value);
     if (isNaN(v) || v < 0) { showError('steps-error'); return; }
@@ -794,7 +840,6 @@
     document.getElementById('steps-input').value = '';
     saveData(); render(); renderWeek(); renderGraph(currentGraph);
   }
-
   function clearViewDay() {
     const vd = getViewDate();
     const label = viewDateOffset === 0 ? '今日' : vd;
@@ -809,7 +854,7 @@
     }
   }
 
-  // ===== 週間ビュー =====
+  // 週間ビュー
   function getWeekDates(offset) {
     const now = new Date();
     const dayOfWeek = now.getDay();
@@ -825,7 +870,6 @@
     }
     return dates;
   }
-
   function renderWeek() {
     const dates = getWeekDates(weekOffset);
     const todayStr = today();
@@ -850,7 +894,6 @@
       const div = document.createElement('div');
       div.className = 'week-day';
       div.onclick = () => {
-        // 週間ビューのタップ → その日に切り替え
         const now = new Date();
         const clicked = new Date(date);
         const diffMs = now - clicked;
@@ -879,7 +922,6 @@
       container.appendChild(div);
     });
   }
-
   function changeWeek(dir) {
     const next = weekOffset + dir;
     if (next < -3 || next > 0) return;
@@ -894,7 +936,7 @@
     else changeWeek(1);
   }
 
-  // ===== 訂正モーダル =====
+  // 訂正モーダル
   let editTargetDate = '';
   function openEditModal(dateStr) {
     editTargetDate = dateStr;
@@ -914,7 +956,6 @@
     hideError('edit-food-error');
     document.getElementById('edit-modal-overlay').classList.add('open');
   }
-
   function renderEditLogList(d) {
     const container = document.getElementById('edit-log-list');
     container.innerHTML = '';
@@ -935,7 +976,6 @@
       container.appendChild(div);
     });
   }
-
   function deleteEditLog(idx) {
     const d = getDateData(editTargetDate);
     d.logs.splice(idx, 1);
@@ -944,7 +984,6 @@
     if (editTargetDate === getViewDate()) { render(); }
     renderWeek(); renderGraph(currentGraph);
   }
-
   function saveEditSteps() {
     const v = parseInt(document.getElementById('edit-steps-input').value);
     if (isNaN(v) || v < 0) { showError('edit-steps-error'); return; }
@@ -954,7 +993,6 @@
     if (editTargetDate === getViewDate()) { render(); }
     renderWeek(); renderGraph(currentGraph);
   }
-
   function addEditLog() {
     const n = document.getElementById('edit-food-name').value.trim();
     const qty = parseFloat(document.getElementById('edit-food-qty').value) || 1;
@@ -983,7 +1021,6 @@
     document.getElementById('edit-food-cal').value = '';
     editSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
   }
-
   function closeEditModal(e) {
     if (e.target === document.getElementById('edit-modal-overlay')) closeEditModalDirect();
   }
@@ -991,7 +1028,12 @@
     document.getElementById('edit-modal-overlay').classList.remove('open');
   }
 
-  // ===== グラフ =====
+// ==============================
+// SECTION 7: JS - グラフ
+// 変更箇所: グラフ種別追加・色変更・表示期間変更
+// 目安行数: ~120行
+// ==============================
+
   function switchGraph(type) {
     currentGraph = type;
     document.querySelectorAll('.graph-tab-btn').forEach((btn, i) => {
@@ -1086,6 +1128,7 @@
       return;
     }
 
+    // 棒グラフ共通（摂取日別・月別・消費日別・月別）
     let labels = [], data = [], color = '', title = '';
     if (type === 'cal-day') {
       labels = days.map(d => d.slice(5));
@@ -1132,11 +1175,13 @@
     });
   }
 
+  // サジェストボックスを閉じる（外タップ時）
   document.addEventListener('click', e => {
     if (e.target.id !== 'food-name') document.getElementById('suggest-list').style.display = 'none';
     if (e.target.id !== 'edit-food-name') document.getElementById('edit-suggest-list').style.display = 'none';
   });
 
+  // 初期化
   loadCSV();
   loadData();
 </script>
