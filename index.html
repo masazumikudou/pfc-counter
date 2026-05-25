@@ -47,6 +47,7 @@
     .status-label { font-size: 11px; font-weight: 900; margin-bottom: 2px; }
     .status-value { font-size: 24px; font-weight: 900; }
     .status-unit { font-size: 11px; margin-left: 1px; }
+    .status-remaining { font-size: 10px; font-weight: 900; color: var(--muted); margin-top: 2px; }
     .sub-status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
     .sub-box { border: 2px solid var(--ink); border-radius: 12px; padding: 6px; text-align: center; font-size: 11px; background: #fff; }
     .sub-val { font-size: 15px; font-weight: 900; }
@@ -221,20 +222,24 @@
   <div class="card">
     <div class="status-grid">
       <div class="status-box" style="border-color:var(--red);background:#FFF5F5;">
-        <div class="status-label" style="color:var(--red);">残りカロリー</div>
-        <div class="status-value" id="cal-remaining">-<span class="status-unit">kcal</span></div>
+        <div class="status-label" style="color:var(--red);">食べたカロリー</div>
+        <div class="status-value" id="cal-eaten">-<span class="status-unit">kcal</span></div>
+        <div class="status-remaining" id="cal-remaining">残り -kcal</div>
       </div>
       <div class="status-box" style="border-color:var(--blue);background:#F5F9FF;">
-        <div class="status-label" style="color:var(--blue);">残り脂質 (F)</div>
-        <div class="status-value" id="fat-remaining">-<span class="status-unit">g</span></div>
+        <div class="status-label" style="color:var(--blue);">食べた脂質 (F)</div>
+        <div class="status-value" id="fat-eaten">-<span class="status-unit">g</span></div>
+        <div class="status-remaining" id="fat-remaining">残り -g</div>
       </div>
       <div class="status-box" style="border-color:var(--orange);background:#FFFBF2;">
-        <div class="status-label" style="color:var(--orange);">残りタンパク (P)</div>
-        <div class="status-value" id="protein-remaining">-<span class="status-unit">g</span></div>
+        <div class="status-label" style="color:var(--orange);">食べたタンパク (P)</div>
+        <div class="status-value" id="protein-eaten">-<span class="status-unit">g</span></div>
+        <div class="status-remaining" id="protein-remaining">残り -g</div>
       </div>
       <div class="status-box" style="border-color:var(--green);background:#F5FBF5;">
-        <div class="status-label" style="color:var(--green);">残り炭水化物 (C)</div>
-        <div class="status-value" id="carbs-remaining">-<span class="status-unit">g</span></div>
+        <div class="status-label" style="color:var(--green);">食べた炭水化物 (C)</div>
+        <div class="status-value" id="carbs-eaten">-<span class="status-unit">g</span></div>
+        <div class="status-remaining" id="carbs-remaining">残り -g</div>
       </div>
     </div>
     <div class="sub-status-grid">
@@ -787,10 +792,14 @@
     const walkBurn = calcWalkBurn(d.steps, profile);
     const totalBurn = calcTotalBurn(d.steps, profile);
 
-    document.getElementById('cal-remaining').innerHTML = `${targets.targetCal - tCal}<span class="status-unit">kcal</span>`;
-    document.getElementById('fat-remaining').innerHTML = `${(targets.targetFat - tFat).toFixed(1)}<span class="status-unit">g</span>`;
-    document.getElementById('protein-remaining').innerHTML = `${(targets.targetProtein - tProtein).toFixed(1)}<span class="status-unit">g</span>`;
-    document.getElementById('carbs-remaining').innerHTML = `${(targets.targetCarbs - tCarbs).toFixed(1)}<span class="status-unit">g</span>`;
+    document.getElementById('cal-eaten').innerHTML = `${tCal}<span class="status-unit">kcal</span>`;
+    document.getElementById('cal-remaining').textContent = `残り ${targets.targetCal - tCal}kcal`;
+    document.getElementById('fat-eaten').innerHTML = `${tFat.toFixed(1)}<span class="status-unit">g</span>`;
+    document.getElementById('fat-remaining').textContent = `残り ${(targets.targetFat - tFat).toFixed(1)}g`;
+    document.getElementById('protein-eaten').innerHTML = `${tProtein.toFixed(1)}<span class="status-unit">g</span>`;
+    document.getElementById('protein-remaining').textContent = `残り ${(targets.targetProtein - tProtein).toFixed(1)}g`;
+    document.getElementById('carbs-eaten').innerHTML = `${tCarbs.toFixed(1)}<span class="status-unit">g</span>`;
+    document.getElementById('carbs-remaining').textContent = `残り ${(targets.targetCarbs - tCarbs).toFixed(1)}g`;
     document.getElementById('current-steps').innerText = d.steps.toLocaleString();
     document.getElementById('walk-burn-cal').innerText = walkBurn.toLocaleString();
     document.getElementById('burn-cal').innerText = totalBurn.toLocaleString();
