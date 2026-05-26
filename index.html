@@ -187,7 +187,7 @@
   <div class="card" id="profile-card" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div class="card-title" style="margin:0;" id="profile-name">－</div>
-      <button class="btn-sub btn-purple" onclick="openSettings()" style="width:auto;padding:6px 14px;font-size:12px;">⚙️ 設定</button>
+      <button class="btn-sub btn-purple" onclick="openSettings()" style="width:auto;padding:6px 14px;font-size:12px;">設定</button>
     </div>
     <div class="profile-summary" id="profile-summary"></div>
   </div>
@@ -195,7 +195,7 @@
   <!-- 体重カード -->
   <div class="weight-card" id="weight-card" style="display:none;">
     <div class="weight-header">
-      <div class="card-title" style="margin:0;">⚖️ 体重</div>
+      <div class="card-title" style="margin:0;">体重</div>
     </div>
     <div class="weight-main">
       <div class="weight-box" style="border-color:var(--blue);">
@@ -252,7 +252,7 @@
   <!-- 週間ビュー -->
   <div class="week-card">
     <div class="week-header">
-      <div class="week-title" id="week-title">📅 今週</div>
+      <div class="week-title" id="week-title">今週</div>
       <div class="week-nav">
         <button class="week-nav-btn" id="week-prev-btn" onclick="changeWeek(-1)">‹</button>
         <button class="week-nav-btn" id="week-next-btn" onclick="changeWeek(1)" disabled>›</button>
@@ -320,13 +320,13 @@
 
   <!-- 今日のログ -->
   <div class="card">
-    <div class="card-title" id="log-card-title">📋 本日のミッション結果</div>
+    <div class="card-title" id="log-card-title">本日のミッション結果</div>
     <div class="log-list" id="log-container"></div>
   </div>
 
   <!-- グラフ -->
   <div class="card">
-    <div class="card-title">📊 グラフ</div>
+    <div class="card-title">グラフ</div>
     <div class="graph-tab-bar">
       <div class="graph-tab-btn active" onclick="switchGraph('cal-day')">摂取<br>日別</div>
       <div class="graph-tab-btn" onclick="switchGraph('cal-month')">摂取<br>月別</div>
@@ -340,15 +340,15 @@
 
   <!-- バックアップ・リストア -->
   <div class="card">
-    <div class="card-title">💾 バックアップ・リストア</div>
+    <div class="card-title">バックアップ・リストア</div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">データをJSONファイルに書き出し・読み込みできます。機種変時の移行にご利用ください。</div>
     <div class="btn-grid">
-      <button class="btn-sub btn-blue" onclick="exportData()">💾 バックアップ</button>
-      <button class="btn-sub btn-green" onclick="document.getElementById('import-file').click()">📂 リストア</button>
+      <button class="btn-sub btn-blue" onclick="exportData()">バックアップ</button>
+      <button class="btn-sub btn-green" onclick="document.getElementById('import-file').click()">リストア</button>
     </div>
     <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
     <div class="inline-error" id="import-error"></div>
-    <div id="import-success" style="color:var(--green);font-size:12px;font-weight:900;margin-top:6px;display:none;">✅ リストア完了！</div>
+    <div id="import-success" style="color:var(--green);font-size:12px;font-weight:900;margin-top:6px;display:none;">リストア完了！</div>
   </div>
 </div>
 
@@ -361,7 +361,7 @@
 <!-- 設定モーダル -->
 <div class="modal-overlay" id="settings-modal">
   <div class="modal">
-    <h2>⚙️ プロフィール設定</h2>
+    <h2>プロフィール設定</h2>
     <div class="form-group">
       <label>お名前</label>
       <input type="text" id="s-name" placeholder="例: 小松">
@@ -410,17 +410,17 @@
 <!-- 訂正モーダル -->
 <div class="edit-modal-overlay" id="edit-modal-overlay" onclick="closeEditModal(event)">
   <div class="edit-modal" id="edit-modal">
-    <div class="edit-modal-title" id="edit-modal-title">📅 訂正</div>
-    <div class="edit-section-label">👟 歩数の修正</div>
+    <div class="edit-modal-title" id="edit-modal-title">訂正</div>
+    <div class="edit-section-label">歩数の修正</div>
     <div class="edit-steps-row">
       <input type="number" id="edit-steps-input" placeholder="歩数を入力" inputmode="numeric">
       <button class="edit-steps-btn" onclick="saveEditSteps()">更新</button>
     </div>
     <div class="inline-error" id="edit-steps-error">正しい歩数を入力してください</div>
-    <div class="edit-section-label">🍽️ 食事ログ</div>
+    <div class="edit-section-label">食事ログ</div>
     <div id="edit-log-list"></div>
     <div class="edit-add-section">
-      <div class="edit-section-label">➕ 食事を追加</div>
+      <div class="edit-section-label">食事を追加</div>
       <div class="form-group" style="margin-bottom:10px;">
         <input type="text" id="edit-food-name" placeholder="食べたもの..." autocomplete="off" oninput="searchMenuEdit(this.value)">
         <div class="suggest-box" id="edit-suggest-list"></div>
@@ -438,7 +438,7 @@
       <div class="inline-error" id="edit-food-error">食べたものを検索して選んでください</div>
       <button class="btn-main" onclick="addEditLog()" style="font-size:15px;padding:12px;">追加する</button>
     </div>
-    <button class="edit-close-btn" onclick="closeEditModalDirect()">✕ とじる</button>
+    <button class="edit-close-btn" onclick="closeEditModalDirect()">とじる</button>
   </div>
 </div>
 
@@ -669,7 +669,7 @@
     document.getElementById('weight-card').style.display = 'block';
     const t = calcTargets(profile);
     const actLabel = { '1.2': '低い', '1.55': '中程度', '1.725': '高い', '1.9': '非常に高い' };
-    document.getElementById('profile-name').textContent = `👤 ${profile.name || 'プロフィール'}`;
+    document.getElementById('profile-name').textContent = profile.name || 'プロフィール';
     document.getElementById('profile-summary').innerHTML =
       `${profile.height}cm / ${profile.weight}kg / ${profile.age}歳 / ${profile.gender === 'male' ? '男性' : '女性'} / 活動: ${actLabel[String(profile.activity)] || '中程度'}<br>` +
       `目標: ${t.targetCal}kcal / P:${t.targetProtein}g / F:${t.targetFat}g / C:${t.targetCarbs}g`;
@@ -761,7 +761,7 @@
     document.getElementById('date-next-btn').disabled = viewDateOffset >= 0;
     document.getElementById('date-prev-btn').disabled = viewDateOffset <= -30;
     document.getElementById('log-card-title').textContent =
-      viewDateOffset === 0 ? '📋 本日のミッション結果' : `📋 ${d.getMonth()+1}/${d.getDate()} の記録`;
+      viewDateOffset === 0 ? '本日のミッション結果' : `${d.getMonth()+1}/${d.getDate()} の記録`;
   }
   function changeViewDate(dir) {
     const next = viewDateOffset + dir;
@@ -820,7 +820,7 @@
             <br><small style="color:var(--muted);">${item.time}</small>
           </div>
           <div class="log-values">${item.cal}kcal/F:${item.fat}g<br><small style="color:var(--muted)">P:${item.protein}/C:${item.carbs}</small></div>
-          <button class="log-del-btn" onclick="deleteLogItem(${idx})">🗑️</button>
+          <button class="log-del-btn" onclick="deleteLogItem(${idx})">削除</button>
         `;
         container.appendChild(div);
       }
@@ -897,7 +897,7 @@
     const todayStr = today();
     const viewStr = getViewDate();
     const dayLabels = ['月','火','水','木','金','土','日'];
-    let titleStr = weekOffset === 0 ? '📅 今週' : weekOffset === -1 ? '📅 先週' : `📅 ${Math.abs(weekOffset)}週前`;
+    let titleStr = weekOffset === 0 ? '今週' : weekOffset === -1 ? '先週' : `${Math.abs(weekOffset)}週前`;
     document.getElementById('week-title').textContent = titleStr;
     document.getElementById('week-prev-btn').disabled = weekOffset <= -3;
     document.getElementById('week-next-btn').disabled = weekOffset >= 0;
@@ -966,7 +966,7 @@
     const [y, m, day] = dateStr.split('-');
     const dateObj = new Date(parseInt(y), parseInt(m)-1, parseInt(day));
     const dayNames = ['日','月','火','水','木','金','土'];
-    document.getElementById('edit-modal-title').textContent = `📅 ${m}月${day}日（${dayNames[dateObj.getDay()]}）の訂正`;
+    document.getElementById('edit-modal-title').textContent = `${m}月${day}日（${dayNames[dateObj.getDay()]}）の訂正`;
     document.getElementById('edit-steps-input').value = d.steps || '';
     renderEditLogList(d);
     document.getElementById('edit-food-name').value = '';
@@ -993,7 +993,7 @@
           <b style="font-size:13px;">${item.name}</b>${item.qty && item.qty !== 1 ? ` <small>×${item.qty}</small>` : ''}
           <br><small style="color:var(--muted);">${item.cal}kcal / F:${item.fat}g / ${item.time}</small>
         </div>
-        <button class="edit-log-del" onclick="deleteEditLog(${idx})">🗑️</button>
+        <button class="edit-log-del" onclick="deleteEditLog(${idx})">削除</button>
       `;
       container.appendChild(div);
     });
@@ -1238,7 +1238,7 @@
       try {
         const backup = JSON.parse(e.target.result);
         if (!backup.version || !backup.logs) {
-          showError('import-error', '❌ ファイルが正しくありません');
+          showError('import-error', '読み込みエラー: ファイルが正しくありません');
           return;
         }
         if (backup.profile) {
@@ -1262,7 +1262,7 @@
         renderWeek();
         renderGraph(currentGraph);
       } catch(err) {
-        showError('import-error', '❌ 読み込みに失敗しました');
+        showError('import-error', '読み込みに失敗しました');
       }
       event.target.value = '';
     };
