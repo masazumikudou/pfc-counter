@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -102,6 +102,10 @@
     .weight-card { background: white; border: 4px solid var(--ink); border-radius: 22px; padding: 18px; box-shadow: 0 8px 0 var(--ink); }
     .weight-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .weight-main { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .bmi-bar { display: flex; align-items: center; gap: 8px; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 12px; margin-bottom: 10px; background: #fafafa; }
+    .bmi-bar-label { font-size: 11px; font-weight: 900; color: var(--muted); }
+    .bmi-bar-val { font-size: 18px; font-weight: 900; }
+    .bmi-bar-judge { font-size: 12px; font-weight: 900; margin-left: auto; }
     .weight-box { text-align: center; padding: 8px 4px; border: 2px solid var(--ink); border-radius: 14px; background: #fafafa; }
     .weight-box-label { font-size: 10px; font-weight: 900; color: var(--muted); margin-bottom: 2px; }
     .weight-box-val { font-size: 20px; font-weight: 900; }
@@ -196,6 +200,11 @@
   <div class="weight-card" id="weight-card" style="display:none;">
     <div class="weight-header">
       <div class="card-title" style="margin:0;">体重</div>
+    </div>
+    <div class="bmi-bar" id="bmi-bar">
+      <span class="bmi-bar-label">BMI</span>
+      <span class="bmi-bar-val" id="bmi-value">－</span>
+      <span class="bmi-bar-judge" id="bmi-judge">－</span>
     </div>
     <div class="weight-main">
       <div class="weight-box" style="border-color:var(--blue);">
@@ -841,6 +850,24 @@
       document.getElementById('weight-diff').style.color = isOver ? 'var(--red)' : 'var(--green)';
     } else {
       document.getElementById('weight-diff').innerHTML = `－<span class="weight-box-unit">kg</span>`;
+    }
+    // BMI計算（現在体重と身長から）
+    const bmiVal = document.getElementById('bmi-value');
+    const bmiJudge = document.getElementById('bmi-judge');
+    if (latest && profile.height) {
+      const h = profile.height / 100;
+      const bmi = latest / (h * h);
+      bmiVal.textContent = bmi.toFixed(1);
+      let judge, color;
+      if (bmi < 18.5) { judge = '低体重'; color = 'var(--blue)'; }
+      else if (bmi < 25) { judge = '普通体重'; color = 'var(--green)'; }
+      else { judge = '肥満'; color = 'var(--red)'; }
+      bmiJudge.textContent = judge;
+      bmiJudge.style.color = color;
+    } else {
+      bmiVal.textContent = '－';
+      bmiJudge.textContent = '－';
+      bmiJudge.style.color = 'var(--muted)';
     }
   }
   function registerWeight() {
@@ -1523,4 +1550,3 @@
 </script>
 </body>
 </html>
-　
