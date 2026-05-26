@@ -341,12 +341,28 @@
   <!-- レシピ集 -->
   <div class="card">
     <div class="card-title">ローファットレシピ集</div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label style="font-size:12px;">カテゴリ</label>
+      <select id="recipe-category" onchange="filterRecipeByCategory(this.value)">
+        <option value="">すべて</option>
+        <option value="鶏肉">鶏肉</option>
+        <option value="魚介">魚介</option>
+        <option value="豆腐・大豆">豆腐・大豆</option>
+        <option value="野菜・スープ">野菜・スープ</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
     <div class="form-group" style="margin-bottom:0;">
+      <label style="font-size:12px;">レシピ</label>
       <select id="recipe-select" onchange="showRecipe(this.value)">
         <option value="">レシピを選んでください</option>
       </select>
     </div>
     <div id="recipe-detail" style="display:none; margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:900;" id="recipe-title"></div>
+        <button onclick="closeRecipeDetail()" style="background:var(--ink);color:white;border:none;border-radius:8px;padding:4px 12px;font-size:13px;font-weight:900;cursor:pointer;">✕</button>
+      </div>
       <div style="margin-bottom:10px;">
         <div style="font-size:12px;font-weight:900;color:var(--muted);margin-bottom:6px;border-bottom:2px solid var(--cream);padding-bottom:4px;">材料</div>
         <div id="recipe-ingredients" style="font-size:13px;line-height:2;"></div>
@@ -557,11 +573,12 @@
       text2.trim().split('\n').forEach(line => {
         if (!line.trim() || line.startsWith('レシピ名')) return;
         const parts = parseCSVLine(line);
-        if (parts.length >= 3) {
+        if (parts.length >= 4) {
           recipeDatabase.push({
             name: parts[0].trim(),
-            ingredients: parts[1].trim(),
-            steps: parts[2].trim()
+            category: parts[1].trim(),
+            ingredients: parts[2].trim(),
+            steps: parts[3].trim()
           });
         }
       });
@@ -1119,6 +1136,29 @@
     document.getElementById('edit-modal-overlay').classList.remove('open');
   }
 
+  // レシピカテゴリ絞り込み
+  function filterRecipeByCategory(category) {
+    const sel = document.getElementById('recipe-select');
+    sel.innerHTML = '<option value="">レシピを選んでください</option>';
+    const filtered = category
+      ? recipeDatabase.filter(r => r.category === category)
+      : recipeDatabase;
+    filtered.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.name;
+      opt.textContent = r.name;
+      sel.appendChild(opt);
+    });
+    closeRecipeDetail();
+  }
+
+  // レシピ詳細を閉じる
+  function closeRecipeDetail() {
+    document.getElementById('recipe-detail').style.display = 'none';
+    document.getElementById('recipe-select').value = '';
+    hideError('recipe-error');
+  }
+
   // レシピ表示
   function showRecipe(name) {
     const detail = document.getElementById('recipe-detail');
@@ -1126,6 +1166,7 @@
     if (!name) { detail.style.display = 'none'; return; }
     const recipe = recipeDatabase.find(r => r.name === name);
     if (!recipe) { detail.style.display = 'none'; return; }
+    document.getElementById('recipe-title').textContent = recipe.name;
     document.getElementById('recipe-ingredients').innerHTML =
       recipe.ingredients.split('/').map(s => '・' + s.trim()).join('<br>');
     document.getElementById('recipe-steps').innerHTML =
@@ -1148,8 +1189,7 @@
       time: timeStr
     });
     saveData(); render(); renderWeek(); renderGraph(currentGraph);
-    document.getElementById('recipe-select').value = '';
-    document.getElementById('recipe-detail').style.display = 'none';
+    closeRecipeDetail();
   }
 
 // ==============================
