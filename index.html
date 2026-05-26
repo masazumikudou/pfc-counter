@@ -338,6 +338,28 @@
     <canvas id="mainChart" height="200"></canvas>
   </div>
 
+  <!-- レシピ集 -->
+  <div class="card">
+    <div class="card-title">ローファットレシピ集</div>
+    <div class="form-group" style="margin-bottom:0;">
+      <select id="recipe-select" onchange="showRecipe(this.value)">
+        <option value="">レシピを選んでください</option>
+      </select>
+    </div>
+    <div id="recipe-detail" style="display:none; margin-top:14px;">
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:900;color:var(--muted);margin-bottom:6px;border-bottom:2px solid var(--cream);padding-bottom:4px;">材料</div>
+        <div id="recipe-ingredients" style="font-size:13px;line-height:2;"></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:900;color:var(--muted);margin-bottom:6px;border-bottom:2px solid var(--cream);padding-bottom:4px;">手順</div>
+        <div id="recipe-steps" style="font-size:13px;line-height:2;"></div>
+      </div>
+      <button class="btn-main" onclick="registerRecipeLog()" style="font-size:15px;padding:12px;">このレシピをログに登録</button>
+      <div class="inline-error" id="recipe-error">data.csvにレシピ名が見つかりません</div>
+    </div>
+  </div>
+
   <!-- バックアップ・リストア -->
   <div class="card">
     <div class="card-title">バックアップ・リストア</div>
@@ -450,6 +472,7 @@
 // ==============================
 
   let menuDatabase = [];
+  let recipeDatabase = [];
   let selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
   let editSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
   let chartInstance = null;
@@ -526,6 +549,52 @@
     } catch(e) {
       document.getElementById('item-count').textContent = 'データ読込エラー';
     }
+
+    try {
+      const res2 = await fetch('recipe.csv?v=' + Date.now());
+      const text2 = await res2.text();
+      recipeDatabase = [];
+      text2.trim().split('\n').forEach(line => {
+        if (!line.trim() || line.startsWith('レシピ名')) return;
+        const parts = parseCSVLine(line);
+        if (parts.length >= 3) {
+          recipeDatabase.push({
+            name: parts[0].trim(),
+            ingredients: parts[1].trim(),
+            steps: parts[2].trim()
+          });
+        }
+      });
+      const sel = document.getElementById('recipe-select');
+      recipeDatabase.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.name;
+        opt.textContent = r.name;
+        sel.appendChild(opt);
+      });
+    } catch(e) {
+      // recipe.csvがなくても動作継続
+    }
+  }
+
+  // ダブルクォート対応CSVパーサー
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        inQuote = !inQuote;
+      } else if (ch === ',' && !inQuote) {
+        result.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    result.push(current);
+    return result;
   }
 
   // 食品検索（メイン画面）
@@ -1048,6 +1117,39 @@
   }
   function closeEditModalDirect() {
     document.getElementById('edit-modal-overlay').classList.remove('open');
+  }
+
+  // レシピ表示
+  function showRecipe(name) {
+    const detail = document.getElementById('recipe-detail');
+    hideError('recipe-error');
+    if (!name) { detail.style.display = 'none'; return; }
+    const recipe = recipeDatabase.find(r => r.name === name);
+    if (!recipe) { detail.style.display = 'none'; return; }
+    document.getElementById('recipe-ingredients').innerHTML =
+      recipe.ingredients.split('/').map(s => '・' + s.trim()).join('<br>');
+    document.getElementById('recipe-steps').innerHTML =
+      recipe.steps.split('/').map(s => s.trim()).join('<br>');
+    detail.style.display = 'block';
+  }
+
+  // レシピをログに登録
+  function registerRecipeLog() {
+    const name = document.getElementById('recipe-select').value;
+    if (!name) return;
+    const food = menuDatabase.find(i => i.name === name);
+    if (!food) { showError('recipe-error', 'data.csvに「' + name + '」が見つかりません'); return; }
+    hideError('recipe-error');
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    getViewData().logs.push({
+      name: food.name, qty: 1,
+      cal: food.cal, fat: food.fat, protein: food.protein, carbs: food.carbs,
+      time: timeStr
+    });
+    saveData(); render(); renderWeek(); renderGraph(currentGraph);
+    document.getElementById('recipe-select').value = '';
+    document.getElementById('recipe-detail').style.display = 'none';
   }
 
 // ==============================
