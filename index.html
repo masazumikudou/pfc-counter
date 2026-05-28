@@ -671,7 +671,12 @@
             name: parts[0].trim(),
             category: parts[1].trim(),
             ingredients: parts[2].trim(),
-            steps: parts[3].trim()
+            steps: parts[3].trim(),
+            cal: parseInt(parts[4]) || 0,
+            protein: parseFloat(parts[5]) || 0,
+            fat: parseFloat(parts[6]) || 0,
+            carbs: parseFloat(parts[7]) || 0
+
           });
         }
       });
@@ -1321,14 +1326,18 @@
   function registerRecipeLog() {
     const name = document.getElementById('recipe-select').value;
     if (!name) return;
-    const food = menuDatabase.find(i => i.name === name);
-    if (!food) { showError('recipe-error', 'data.csvに「' + name + '」が見つかりません'); return; }
+    const recipe = recipeDatabase.find(r => r.name === name);
+if (!recipe) { showError('recipe-error', 'レシピが見つかりません'); return; }
+
+    
     hideError('recipe-error');
     const now = new Date();
     const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
     getViewData().logs.push({
-      name: food.name, qty: 1,
-      cal: food.cal, fat: food.fat, protein: food.protein, carbs: food.carbs,
+      name: recipe.name, qty: 1,
+
+     cal: recipe.cal, fat: recipe.fat, protein: recipe.protein, carbs: recipe.carbs,
+
       time: timeStr
     });
     saveData(); render(); renderWeek(); renderGraph(currentGraph);
