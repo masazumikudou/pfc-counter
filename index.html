@@ -98,9 +98,24 @@
     .log-del-btn { background: var(--red); color: white; border: 2px solid var(--ink); border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 900; cursor: pointer; margin-left: 8px; flex-shrink: 0; }
 
     /* グラフタブ */
-    .graph-tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 12px; }
-    .graph-tab-btn { padding: 6px 2px; border: 2px solid var(--ink); border-radius: 8px; font-size: 9px; font-weight: 900; cursor: pointer; background: #f0f0f0; text-align: center; }
-    .graph-tab-btn.active { background: var(--ink); color: white; }
+    .graph-tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+    .graph-tab-btn { padding: 9px 2px; border: 3px solid var(--ink); border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; background: #f0f0f0; text-align: center; }
+    .graph-tab-btn.active { background: var(--ink); color: white; box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+
+    /* 期間ボタン（日/週/月） */
+    .graph-period-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .graph-period-bar.hidden { display: none; }
+    .graph-period-btn { padding: 7px 2px; border: 2px solid var(--ink); border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; background: #fff; text-align: center; }
+    .graph-period-btn.active { background: var(--blue); color: white; }
+
+    /* グラフ期間ナビ（前後移動＋合計） */
+    .graph-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+    .graph-nav.hidden { display: none; }
+    .graph-nav-btn { background: var(--ink); color: white; border: none; border-radius: 8px; width: 32px; height: 32px; font-size: 16px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .graph-nav-btn:disabled { background: #ccc; cursor: default; }
+    .graph-nav-center { flex: 1; text-align: center; }
+    .graph-nav-range { font-size: 11px; font-weight: 900; color: var(--muted); }
+    .graph-nav-total { font-size: 15px; font-weight: 900; }
 
     /* 数量行 */
     .qty-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
@@ -400,13 +415,23 @@
   <div class="card">
     <div class="card-title">グラフ</div>
     <div class="graph-tab-bar">
-      <div class="graph-tab-btn active" onclick="switchGraph('cal-day')">摂取<br>日別</div>
-      <div class="graph-tab-btn" onclick="switchGraph('cal-month')">摂取<br>月別</div>
-      <div class="graph-tab-btn" onclick="switchGraph('burn-day')">消費<br>日別</div>
-      <div class="graph-tab-btn" onclick="switchGraph('burn-month')">消費<br>月別</div>
-      <div class="graph-tab-btn" onclick="switchGraph('weight')">体重<br>推移</div>
-      <div class="graph-tab-btn" onclick="switchGraph('balance')">収支<br>日別</div>
-      <div class="graph-tab-btn" onclick="switchGraph('balance-week')">収支<br>週別</div>
+      <div class="graph-tab-btn" id="tab-weight" onclick="selectGraphTab('weight')">体重</div>
+      <div class="graph-tab-btn active" id="tab-intake" onclick="selectGraphTab('intake')">摂取</div>
+      <div class="graph-tab-btn" id="tab-burn" onclick="selectGraphTab('burn')">消費</div>
+      <div class="graph-tab-btn" id="tab-balance" onclick="selectGraphTab('balance')">収支</div>
+    </div>
+    <div class="graph-period-bar" id="graph-period-bar">
+      <div class="graph-period-btn active" id="period-day" onclick="selectGraphPeriod('day')">日</div>
+      <div class="graph-period-btn" id="period-week" onclick="selectGraphPeriod('week')">週</div>
+      <div class="graph-period-btn" id="period-month" onclick="selectGraphPeriod('month')">月</div>
+    </div>
+    <div class="graph-nav hidden" id="graph-nav">
+      <button class="graph-nav-btn" id="graph-prev-btn" onclick="changeGraphOffset(-1)">‹</button>
+      <div class="graph-nav-center">
+        <div class="graph-nav-range" id="graph-nav-range">－</div>
+        <div class="graph-nav-total" id="graph-nav-total">－</div>
+      </div>
+      <button class="graph-nav-btn" id="graph-next-btn" onclick="changeGraphOffset(1)" disabled>›</button>
     </div>
     <canvas id="mainChart" height="200"></canvas>
   </div>
@@ -561,7 +586,6 @@
   let selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
   let editSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
   let chartInstance = null;
-  let currentGraph = 'cal-day';
   let allData = {};
   let weightLog = [];
   let profile = null;
@@ -824,7 +848,7 @@
     renderProfile();
     render();
     renderWeek();
-    renderGraph(currentGraph);
+    renderGraph();
   }
 
   function renderProfile() {
@@ -891,7 +915,7 @@
     localStorage.setItem('pfc_weight', JSON.stringify(weightLog));
     document.getElementById('weight-input').value = '';
     renderWeightCard();
-    renderGraph(currentGraph);
+    renderGraph();
   }
 
   function loadData() {
@@ -910,7 +934,7 @@
     updateHeaderDate();
     render();
     renderWeek();
-    renderGraph(currentGraph);
+    renderGraph();
   }
   function saveData() { localStorage.setItem('pfc_v9', JSON.stringify(allData)); }
 
@@ -1051,7 +1075,7 @@
   function deleteLogItem(idx) {
     const d = getViewData();
     d.logs.splice(idx, 1);
-    saveData(); render(); renderWeek(); renderGraph(currentGraph);
+    saveData(); render(); renderWeek(); renderGraph();
   }
 
   function addLog() {
@@ -1071,7 +1095,7 @@
     document.getElementById('food-qty').value = '1';
     ['food-cal','food-fat','food-protein','food-carbs'].forEach(id => document.getElementById(id).value = '');
     selectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
-    saveData(); render(); renderWeek(); renderGraph(currentGraph);
+    saveData(); render(); renderWeek(); renderGraph();
   }
 
   function updateSteps() {
@@ -1080,19 +1104,19 @@
     hideError('steps-error');
     getViewData().steps = v;
     document.getElementById('steps-input').value = '';
-    saveData(); render(); renderWeek(); renderGraph(currentGraph);
+    saveData(); render(); renderWeek(); renderGraph();
   }
   function clearViewDay() {
     const vd = getViewDate();
     const label = viewDateOffset === 0 ? '今日' : vd;
     if (confirm(`${label}のログをリセットしますか？`)) {
       allData[vd] = { logs: [], steps: 0, exercises: [] };
-      saveData(); render(); renderWeek(); renderGraph(currentGraph);
+      saveData(); render(); renderWeek(); renderGraph();
     }
   }
   function resetAll() {
     if (confirm('全データをリセットしますか？')) {
-      allData = {}; saveData(); render(); renderWeek(); renderGraph(currentGraph);
+      allData = {}; saveData(); render(); renderWeek(); renderGraph();
     }
   }
 
@@ -1224,7 +1248,7 @@
     saveData();
     renderEditLogList(d);
     if (editTargetDate === getViewDate()) { render(); }
-    renderWeek(); renderGraph(currentGraph);
+    renderWeek(); renderGraph();
   }
   function saveEditSteps() {
     const v = parseInt(document.getElementById('edit-steps-input').value);
@@ -1233,7 +1257,7 @@
     getDateData(editTargetDate).steps = v;
     saveData();
     if (editTargetDate === getViewDate()) { render(); }
-    renderWeek(); renderGraph(currentGraph);
+    renderWeek(); renderGraph();
   }
   function addEditLog() {
     const n = document.getElementById('edit-food-name').value.trim();
@@ -1257,7 +1281,7 @@
     saveData();
     renderEditLogList(d);
     if (editTargetDate === getViewDate()) { render(); }
-    renderWeek(); renderGraph(currentGraph);
+    renderWeek(); renderGraph();
     document.getElementById('edit-food-name').value = '';
     document.getElementById('edit-food-qty').value = '1';
     document.getElementById('edit-food-cal').value = '';
@@ -1282,12 +1306,12 @@
     document.getElementById('exercise-type').value = '';
     document.getElementById('exercise-time').value = '';
     document.getElementById('exercise-preview').style.display = 'none';
-    saveData(); render(); renderWeek(); renderGraph(currentGraph);
+    saveData(); render(); renderWeek(); renderGraph();
   }
   function deleteExercise(idx) {
     const d = getViewData();
     d.exercises.splice(idx, 1);
-    saveData(); render(); renderWeek(); renderGraph(currentGraph);
+    saveData(); render(); renderWeek(); renderGraph();
   }
 
   function filterRecipeByCategory(category) {
@@ -1327,20 +1351,16 @@
     const name = document.getElementById('recipe-select').value;
     if (!name) return;
     const recipe = recipeDatabase.find(r => r.name === name);
-if (!recipe) { showError('recipe-error', 'レシピが見つかりません'); return; }
-
-    
+    if (!recipe) { showError('recipe-error', 'レシピが見つかりません'); return; }
     hideError('recipe-error');
     const now = new Date();
     const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
     getViewData().logs.push({
       name: recipe.name, qty: 1,
-
-     cal: recipe.cal, fat: recipe.fat, protein: recipe.protein, carbs: recipe.carbs,
-
+      cal: recipe.cal, fat: recipe.fat, protein: recipe.protein, carbs: recipe.carbs,
       time: timeStr
     });
-    saveData(); render(); renderWeek(); renderGraph(currentGraph);
+    saveData(); render(); renderWeek(); renderGraph();
     closeRecipeDetail();
   }
 
@@ -1348,15 +1368,77 @@ if (!recipe) { showError('recipe-error', 'レシピが見つかりません'); r
 // SECTION 7: JS - グラフ
 // ==============================
 
-  function switchGraph(type) {
-    currentGraph = type;
-    const types = ['cal-day','cal-month','burn-day','burn-month','weight','balance','balance-week'];
-    document.querySelectorAll('.graph-tab-btn').forEach((btn, i) => {
-      btn.classList.toggle('active', types[i] === type);
+  // グラフ状態
+  let graphTab = 'intake';      // weight / intake / burn / balance
+  let graphPeriod = 'day';      // day / week / month
+  let graphOffset = 0;          // 0=最新, -1=1つ前... （週/月ナビ用）
+
+  const GRAPH_NAV_LIMIT = 11;   // 何個前まで遡れるか（週/月とも）
+
+  // タブ切替
+  function selectGraphTab(tab) {
+    graphTab = tab;
+    graphOffset = 0;
+    ['weight','intake','burn','balance'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
     });
-    renderGraph(type);
+    // 体重は期間ボタン非表示
+    const periodBar = document.getElementById('graph-period-bar');
+    if (tab === 'weight') {
+      periodBar.classList.add('hidden');
+    } else {
+      periodBar.classList.remove('hidden');
+    }
+    renderGraph();
   }
 
+  // 期間切替
+  function selectGraphPeriod(period) {
+    graphPeriod = period;
+    graphOffset = 0;
+    ['day','week','month'].forEach(p => {
+      document.getElementById('period-' + p).classList.toggle('active', p === period);
+    });
+    renderGraph();
+  }
+
+  // 前後ナビ（週/月のみ）
+  function changeGraphOffset(dir) {
+    const next = graphOffset + dir;
+    if (next > 0 || next < -GRAPH_NAV_LIMIT) return;
+    graphOffset = next;
+    renderGraph();
+  }
+
+  // ===== 集計ヘルパー =====
+  // 指定日の摂取/消費/収支を返す
+  function getDayValue(dateStr, metric) {
+    const day = allData[dateStr];
+    const intake = day ? day.logs.reduce((s, i) => s + i.cal, 0) : 0;
+    if (metric === 'intake') return intake;
+    const burn = calcTotalBurn(day ? day.steps : 0, profile, day ? day.exercises : []);
+    if (metric === 'burn') return burn;
+    return burn - intake; // balance
+  }
+
+  // offset週の月曜起点7日間の日付配列を返す（offset=0が今週）
+  function getWeekDateStrs(offset) {
+    const now = new Date();
+    const dow = now.getDay();
+    const mondayOffset = (dow === 0) ? -6 : 1 - dow;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + mondayOffset + offset * 7);
+    monday.setHours(0,0,0,0);
+    const arr = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      arr.push(dateStrFromDate(d));
+    }
+    return arr;
+  }
+
+  // 直近30日（日別グラフ用）
   function getLast30Days() {
     const days = [];
     for (let i = 29; i >= 0; i--) {
@@ -1365,182 +1447,214 @@ if (!recipe) { showError('recipe-error', 'レシピが見つかりません'); r
     }
     return days;
   }
-  function getLast6Months() {
-    const months = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(); d.setMonth(d.getMonth() - i);
-      months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
-    }
-    return months;
+
+  // メトリック別の色
+  function metricColor(metric) {
+    if (metric === 'intake') return '#E60012';
+    if (metric === 'burn') return '#43B047';
+    return '#2A6FD6';
   }
 
-  function renderGraph(type) {
+  // ===== メイン描画 =====
+  function renderGraph() {
     const ctx = document.getElementById('mainChart').getContext('2d');
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+    const nav = document.getElementById('graph-nav');
+
+    // --- 体重（期間なし・推移1本） ---
+    if (graphTab === 'weight') {
+      nav.classList.add('hidden');
+      renderWeightChart(ctx);
+      return;
+    }
+
+    const metric = graphTab; // intake / burn / balance
+
+    // --- 日別（直近30日・ナビなし） ---
+    if (graphPeriod === 'day') {
+      nav.classList.add('hidden');
+      renderDayChart(ctx, metric);
+      return;
+    }
+
+    // --- 週別（月〜日の7本＋週合計・ナビあり） ---
+    if (graphPeriod === 'week') {
+      nav.classList.remove('hidden');
+      renderWeekChart(ctx, metric);
+      return;
+    }
+
+    // --- 月別（週次バー＋月合計・ナビあり） ---
+    if (graphPeriod === 'month') {
+      nav.classList.remove('hidden');
+      renderMonthChart(ctx, metric);
+      return;
+    }
+  }
+
+  // 体重推移
+  function renderWeightChart(ctx) {
     const days = getLast30Days();
-
-    if (type === 'weight') {
-      const labels = days.map(d => d.slice(5));
-      const data = days.map(d => {
-        const w = weightLog.find(x => x.date === d);
-        return w ? w.weight : null;
+    const labels = days.map(d => d.slice(5));
+    const data = days.map(d => {
+      const w = weightLog.find(x => x.date === d);
+      return w ? w.weight : null;
+    });
+    const datasets = [{
+      label: '体重(kg)', data,
+      borderColor: '#2A6FD6', backgroundColor: '#2A6FD633',
+      borderWidth: 2, pointRadius: 4, tension: 0.3, spanGaps: true
+    }];
+    if (profile && profile.targetWeight) {
+      datasets.push({
+        label: '目標体重', data: days.map(() => profile.targetWeight),
+        borderColor: '#43B047', borderWidth: 2, borderDash: [6,3],
+        pointRadius: 0, tension: 0
       });
-      const datasets = [{
-        label: '体重(kg)', data,
-        borderColor: '#2A6FD6', backgroundColor: '#2A6FD633',
-        borderWidth: 2, pointRadius: 4, tension: 0.3, spanGaps: true
-      }];
-      if (profile && profile.targetWeight) {
-        datasets.push({
-          label: '目標体重', data: days.map(() => profile.targetWeight),
-          borderColor: '#43B047', borderWidth: 2, borderDash: [6,3],
-          pointRadius: 0, tension: 0
-        });
+    }
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: true, labels: { font: { size: 10 } } } },
+        scales: {
+          x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+          y: { ticks: { font: { size: 10 }, callback: v => v + 'kg' } }
+        }
       }
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: true, labels: { font: { size: 10 } } } },
-          scales: {
-            x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
-            y: { ticks: { font: { size: 10 }, callback: v => v + 'kg' } }
-          }
-        }
-      });
-      return;
-    }
+    });
+  }
 
-    if (type === 'balance') {
-      const labels = days.map(d => d.slice(5));
-      const data = days.map(d => {
-        const day = allData[d];
-        const intake = day ? day.logs.reduce((s, i) => s + i.cal, 0) : 0;
-        const burn = calcTotalBurn(day ? day.steps : 0, profile, day ? day.exercises : []);
-        return burn - intake;
-      });
-      const colors = data.map(v => v >= 0 ? '#43B04799' : '#E6001299');
-      const borders = data.map(v => v >= 0 ? '#43B047' : '#E60012');
-      chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{ label: 'カロリー収支', data, backgroundColor: colors, borderColor: borders, borderWidth: 2, borderRadius: 4 }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => (ctx.parsed.y >= 0 ? 'アンダー+' : 'オーバー') + Math.abs(ctx.parsed.y) + 'kcal' } }
-          },
-          scales: {
-            x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
-            y: { ticks: { font: { size: 10 }, callback: v => v + 'kcal' } }
-          }
-        }
-      });
-      return;
-    }
+  // 日別（直近30日）
+  function renderDayChart(ctx, metric) {
+    const days = getLast30Days();
+    const labels = days.map(d => d.slice(5));
+    const data = days.map(d => getDayValue(d, metric));
+    buildBarChart(ctx, labels, data, metric, true);
+  }
 
-    if (type === 'balance-week') {
-      // 直近8週の週次収支
-      const weekLabels = [];
-      const weekData = [];
-      for (let w = 7; w >= 0; w--) {
-        const weekDays = [];
-        for (let d = 6; d >= 0; d--) {
-          const date = new Date();
-          date.setDate(date.getDate() - w * 7 - d);
-          weekDays.push(dateStrFromDate(date));
+  // 週別（月〜日の7本＋週合計）
+  function renderWeekChart(ctx, metric) {
+    const dateStrs = getWeekDateStrs(graphOffset);
+    const dayLabels = ['月','火','水','木','金','土','日'];
+    const data = dateStrs.map(ds => getDayValue(ds, metric));
+    const total = data.reduce((s, v) => s + v, 0);
+
+    // ナビ表示更新
+    const [sy, sm, sd] = dateStrs[0].split('-');
+    const [ey, em, ed] = dateStrs[6].split('-');
+    document.getElementById('graph-nav-range').textContent =
+      `${parseInt(sm)}/${parseInt(sd)} 〜 ${parseInt(em)}/${parseInt(ed)}`;
+    updateNavTotal(metric, total, '週合計');
+    document.getElementById('graph-prev-btn').disabled = graphOffset <= -GRAPH_NAV_LIMIT;
+    document.getElementById('graph-next-btn').disabled = graphOffset >= 0;
+
+    buildBarChart(ctx, dayLabels, data, metric, false);
+  }
+
+  // 月別（offset月に含まれる各週を月曜起点7日フルで集計）
+  function renderMonthChart(ctx, metric) {
+    const base = new Date();
+    base.setMonth(base.getMonth() + graphOffset, 1);
+    const year = base.getFullYear();
+    const month = base.getMonth(); // 0-indexed
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // この月の日が属する「月曜起点の週」をユニークに集める
+    // 各週は月をまたいでも7日フルで集計する
+    const weekMap = new Map(); // mondayDateStr -> { label, days:[7日分dateStr] }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(year, month, day);
+      const dow = d.getDay();
+      const mondayOffset = (dow === 0) ? -6 : 1 - dow;
+      const monday = new Date(d);
+      monday.setDate(d.getDate() + mondayOffset);
+      monday.setHours(0,0,0,0);
+      const mKey = dateStrFromDate(monday);
+      if (!weekMap.has(mKey)) {
+        const days7 = [];
+        for (let i = 0; i < 7; i++) {
+          const wd = new Date(monday);
+          wd.setDate(monday.getDate() + i);
+          days7.push(dateStrFromDate(wd));
         }
-        const startDate = weekDays[0];
-        const [y, m, day] = startDate.split('-');
-        weekLabels.push(`${m}/${day}週`);
-        let weekBalance = 0;
-        weekDays.forEach(dateStr => {
-          const dayData = allData[dateStr];
-          const intake = dayData ? dayData.logs.reduce((s, i) => s + i.cal, 0) : 0;
-          const burn = calcTotalBurn(dayData ? dayData.steps : 0, profile, dayData ? dayData.exercises : []);
-          weekBalance += (burn - intake);
-        });
-        weekData.push(weekBalance);
+        weekMap.set(mKey, { label: `${monday.getMonth() + 1}/${monday.getDate()}週`, days: days7 });
       }
-      const colors = weekData.map(v => v >= 0 ? '#43B04799' : '#E6001299');
-      const borders = weekData.map(v => v >= 0 ? '#43B047' : '#E60012');
-      chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: weekLabels,
-          datasets: [{
-            label: '週次収支',
-            data: weekData,
-            backgroundColor: colors,
-            borderColor: borders,
-            borderWidth: 2,
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: ctx => (ctx.parsed.y >= 0 ? 'アンダー +' : 'オーバー ') + Math.abs(ctx.parsed.y).toLocaleString() + 'kcal'
-              }
-            }
-          },
-          scales: {
-            x: { ticks: { font: { size: 9 } } },
-            y: { ticks: { font: { size: 10 }, callback: v => v + 'kcal' } }
-          }
-        }
-      });
-      return;
     }
 
-    // 棒グラフ共通
-    let labels = [], data = [], color = '', title = '';
-    if (type === 'cal-day') {
-      labels = days.map(d => d.slice(5));
-      data = days.map(d => { const day = allData[d]; return day ? day.logs.reduce((s, i) => s + i.cal, 0) : 0; });
-      color = '#E60012'; title = '摂取カロリー（直近30日）';
-    } else if (type === 'cal-month') {
-      const months = getLast6Months();
-      labels = months.map(m => m.slice(5) + '月');
-      data = months.map(m => {
-        let total = 0;
-        Object.keys(allData).forEach(d => { if (d.startsWith(m)) total += allData[d].logs.reduce((s, i) => s + i.cal, 0); });
-        return total;
-      });
-      color = '#E60012'; title = '摂取カロリー（月別）';
-    } else if (type === 'burn-day') {
-      labels = days.map(d => d.slice(5));
-      data = days.map(d => { const day = allData[d]; return calcTotalBurn(day ? day.steps : 0, profile, day ? day.exercises : []); });
-      color = '#43B047'; title = '消費カロリー（直近30日）';
-    } else if (type === 'burn-month') {
-      const months = getLast6Months();
-      labels = months.map(m => m.slice(5) + '月');
-      data = months.map(m => {
-        let total = 0, count = 0;
-        Object.keys(allData).forEach(d => { if (d.startsWith(m)) { total += calcTotalBurn(allData[d].steps, profile, allData[d].exercises || []); count++; } });
-        return count > 0 ? Math.round(total / count) : calcTotalBurn(0, profile, []);
-      });
-      color = '#43B047'; title = '消費カロリー平均（月別）';
+    const weeks = Array.from(weekMap.values());
+    const labels = weeks.map(w => w.label);
+    // バー＝各週7日フル合計
+    const data = weeks.map(w => w.days.reduce((s, ds) => s + getDayValue(ds, metric), 0));
+
+    // 月合計＝月内の日だけ（二重計上を避ける）
+    let monthTotal = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+      monthTotal += getDayValue(dateStrFromDate(new Date(year, month, day)), metric);
     }
 
+    document.getElementById('graph-nav-range').textContent = `${year}年 ${month + 1}月`;
+    updateNavTotal(metric, monthTotal, '月合計');
+    document.getElementById('graph-prev-btn').disabled = graphOffset <= -GRAPH_NAV_LIMIT;
+    document.getElementById('graph-next-btn').disabled = graphOffset >= 0;
+
+    buildBarChart(ctx, labels, data, metric, false);
+  }
+
+  // ナビの合計表示（収支は色分け＆アンダー/オーバー表記）
+  function updateNavTotal(metric, total, prefix) {
+    const el = document.getElementById('graph-nav-total');
+    if (metric === 'balance') {
+      if (total >= 0) {
+        el.textContent = `${prefix} アンダー +${total.toLocaleString()}kcal`;
+        el.style.color = 'var(--green)';
+      } else {
+        el.textContent = `${prefix} オーバー ${Math.abs(total).toLocaleString()}kcal`;
+        el.style.color = 'var(--red)';
+      }
+    } else {
+      el.textContent = `${prefix} ${total.toLocaleString()}kcal`;
+      el.style.color = metricColor(metric);
+    }
+  }
+
+  // 棒グラフ共通ビルダー（収支は正負で色分け）
+  function buildBarChart(ctx, labels, data, metric, rotate) {
+    let bg, border;
+    if (metric === 'balance') {
+      bg = data.map(v => v >= 0 ? '#43B04799' : '#E6001299');
+      border = data.map(v => v >= 0 ? '#43B047' : '#E60012');
+    } else {
+      const c = metricColor(metric);
+      bg = c + '99';
+      border = c;
+    }
     chartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels,
-        datasets: [{ label: title, data, backgroundColor: color + '99', borderColor: color, borderWidth: 2, borderRadius: 4 }]
+        datasets: [{ data, backgroundColor: bg, borderColor: border, borderWidth: 2, borderRadius: 4 }]
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + 'kcal' } } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const v = ctx.parsed.y;
+                if (metric === 'balance') {
+                  return (v >= 0 ? 'アンダー +' : 'オーバー ') + Math.abs(v).toLocaleString() + 'kcal';
+                }
+                return v.toLocaleString() + 'kcal';
+              }
+            }
+          }
+        },
         scales: {
-          x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+          x: { ticks: { font: { size: 9 }, maxRotation: rotate ? 45 : 0 } },
           y: { ticks: { font: { size: 10 }, callback: v => v + 'kcal' } }
         }
       }
@@ -1593,7 +1707,7 @@ if (!recipe) { showError('recipe-error', 'レシピが見つかりません'); r
         if (backup.logs) {
           allData = backup.logs;
           saveData();
-        }S
+        }
         if (backup.weightLog) {
           weightLog = backup.weightLog;
           localStorage.setItem('pfc_weight', JSON.stringify(weightLog));
@@ -1605,7 +1719,7 @@ if (!recipe) { showError('recipe-error', 'レシピが見つかりません'); r
         renderProfile();
         render();
         renderWeek();
-        renderGraph(currentGraph);
+        renderGraph();
       } catch(err) {
         showError('import-error', '読み込みに失敗しました');
       }
@@ -1617,7 +1731,7 @@ if (!recipe) { showError('recipe-error', 'レシピが見つかりません'); r
   // 初期化
   loadCSV();
   loadData();
-  document.getElementById('exercise-type').addEventListener('change', updateExercisePreviewS);
+  document.getElementById('exercise-type').addEventListener('change', updateExercisePreview);
   document.getElementById('exercise-time').addEventListener('input', updateExercisePreview);
 </script>
 </body>
