@@ -175,6 +175,33 @@
     .week-day-kcal { font-size: 8px; font-weight: 900; color: var(--red); line-height: 1; }
     .week-day-steps { font-size: 8px; font-weight: 900; color: var(--green); line-height: 1; }
 
+    /* フローティング食事入力ボタン */
+    .fab {
+      position: fixed; right: 18px; bottom: 22px;
+      width: 62px; height: 62px; border-radius: 50%;
+      background: #A8C0BD; border: 4px solid var(--ink);
+      box-shadow: 0 5px 0 var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 150;
+      transition: transform 0.1s;
+    }
+    .fab:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+    .fab svg { width: 30px; height: 30px; }
+
+    /* クイック食事入力モーダル（FAB用） */
+    .quick-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 250; display: none; align-items: flex-end; justify-content: center; }
+    .quick-modal-overlay.open { display: flex; }
+    .quick-modal {
+      background: white; border: 4px solid var(--ink);
+      border-radius: 22px 22px 0 0;
+      padding: 20px; width: 100%; max-width: 440px;
+      box-shadow: 0 -6px 0 var(--ink);
+      max-height: 85vh; overflow-y: auto;
+      animation: slideUp 0.25s ease;
+    }
+    .quick-modal-title { font-size: 16px; font-weight: 900; text-align: center; margin-bottom: 4px; }
+    .quick-modal-date { font-size: 12px; font-weight: 900; color: var(--muted); text-align: center; margin-bottom: 14px; }
+
     /* 訂正モーダル */
     .edit-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
     .edit-modal-overlay.open { display: flex; }
@@ -491,6 +518,58 @@
 <!-- ==============================
      SECTION 3: HTML - モーダル
 ============================== -->
+
+<!-- フローティング食事入力ボタン -->
+<div class="fab" id="food-fab" onclick="openQuickModal()" aria-label="食事を入力">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- フォーク -->
+    <path d="M6 3v5a2 2 0 0 0 2 2v0M9 3v5M6 3v5" stroke="#8A7368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M7.5 10v11" stroke="#8A7368" stroke-width="2.4" stroke-linecap="round"/>
+    <!-- スプーン -->
+    <ellipse cx="16.5" cy="6.5" rx="3" ry="4" fill="#8A7368"/>
+    <path d="M16.5 10.5V21" stroke="#8A7368" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<!-- クイック食事入力モーダル（FAB用） -->
+<div class="quick-modal-overlay" id="quick-modal-overlay" onclick="closeQuickModal(event)">
+  <div class="quick-modal" id="quick-modal">
+    <div class="quick-modal-title">食事を記録</div>
+    <div class="quick-modal-date" id="quick-modal-date">－</div>
+    <div class="form-group">
+      <label>食べたもの <span class="badge">検索</span></label>
+      <input type="text" id="quick-food-name" placeholder="牛丼、ラーメン、うどんなど..." autocomplete="off" oninput="searchMenuQuick(this.value)">
+      <div class="suggest-box" id="quick-suggest-list"></div>
+    </div>
+    <div class="qty-row">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>数量 <span class="badge">倍率</span></label>
+        <input type="number" id="quick-food-qty" value="1" step="0.1" min="0.1" inputmode="decimal" onfocus="this.select()">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label>カロリー (kcal)</label>
+        <input type="number" id="quick-food-cal" placeholder="0" inputmode="numeric" readonly style="opacity:0.7;">
+      </div>
+    </div>
+    <div class="status-grid" style="margin-top:12px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>脂質 (g)</label>
+        <input type="number" id="quick-food-fat" placeholder="0.0" step="0.1" inputmode="decimal" readonly style="opacity:0.7;">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label>タンパク質 (g)</label>
+        <input type="number" id="quick-food-protein" placeholder="0.0" step="0.1" inputmode="decimal" readonly style="opacity:0.7;">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px;">
+      <label>炭水化物 (g)</label>
+      <input type="number" id="quick-food-carbs" placeholder="0.0" step="0.1" inputmode="decimal" readonly style="opacity:0.7;">
+    </div>
+    <div class="inline-error" id="quick-food-error">食べたものを検索して選んでください</div>
+    <button class="btn-main" onclick="addQuickLog()" style="margin-top:8px;">ミッション登録！</button>
+    <button class="edit-close-btn" onclick="closeQuickModalDirect()">とじる</button>
+  </div>
+</div>
 
 <!-- 設定モーダル -->
 <div class="modal-overlay" id="settings-modal">
@@ -1294,6 +1373,86 @@
     document.getElementById('edit-modal-overlay').classList.remove('open');
   }
 
+  // ===== クイック食事入力（フローティングボタン）=====
+  let quickSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
+
+  function openQuickModal() {
+    // 表示日に合わせる
+    const d = new Date();
+    d.setDate(d.getDate() + viewDateOffset);
+    const dayNames = ['日','月','火','水','木','金','土'];
+    const label = viewDateOffset === 0
+      ? `今日 ${d.getMonth()+1}/${d.getDate()}（${dayNames[d.getDay()]}）に追加`
+      : `${d.getMonth()+1}/${d.getDate()}（${dayNames[d.getDay()]}）に追加`;
+    document.getElementById('quick-modal-date').textContent = label;
+    document.getElementById('quick-food-name').value = '';
+    document.getElementById('quick-food-qty').value = '1';
+    ['quick-food-cal','quick-food-fat','quick-food-protein','quick-food-carbs'].forEach(id => document.getElementById(id).value = '');
+    quickSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
+    document.getElementById('quick-suggest-list').style.display = 'none';
+    hideError('quick-food-error');
+    document.getElementById('quick-modal-overlay').classList.add('open');
+  }
+  function closeQuickModal(e) {
+    if (e.target === document.getElementById('quick-modal-overlay')) closeQuickModalDirect();
+  }
+  function closeQuickModalDirect() {
+    document.getElementById('quick-modal-overlay').classList.remove('open');
+  }
+  function searchMenuQuick(query) {
+    const box = document.getElementById('quick-suggest-list');
+    if (!query) { box.style.display = 'none'; return; }
+    const q = normalize(query);
+    const filtered = menuDatabase.filter(i => normalize(i.name).includes(q)).slice(0, 12);
+    if (!filtered.length) { box.style.display = 'none'; return; }
+    box.innerHTML = '';
+    filtered.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'suggest-item';
+      div.innerHTML = `<div>${item.name}</div><div class="suggest-meta">${item.cal}kcal / F:${item.fat}g</div>`;
+      div.onclick = () => {
+        document.getElementById('quick-food-name').value = item.name;
+        quickSelectedBase = { cal: item.cal, fat: item.fat, protein: item.protein, carbs: item.carbs };
+        document.getElementById('quick-food-qty').value = '1';
+        updateQuickQty();
+        box.style.display = 'none';
+        hideError('quick-food-error');
+      };
+      box.appendChild(div);
+    });
+    box.style.display = 'block';
+  }
+  function updateQuickQty() {
+    const qty = parseFloat(document.getElementById('quick-food-qty').value) || 1;
+    document.getElementById('quick-food-cal').value = Math.round(quickSelectedBase.cal * qty);
+    document.getElementById('quick-food-fat').value = (quickSelectedBase.fat * qty).toFixed(1);
+    document.getElementById('quick-food-protein').value = (quickSelectedBase.protein * qty).toFixed(1);
+    document.getElementById('quick-food-carbs').value = (quickSelectedBase.carbs * qty).toFixed(1);
+  }
+  document.getElementById('quick-food-qty').addEventListener('input', updateQuickQty);
+  function addQuickLog() {
+    const n = document.getElementById('quick-food-name').value.trim();
+    if (!n || (!quickSelectedBase.cal && quickSelectedBase.cal !== 0)) { showError('quick-food-error', '食べたものを検索して選んでください'); return; }
+    if (!quickSelectedBase.cal) { showError('quick-food-error', '食べたものを検索して選んでください'); return; }
+    hideError('quick-food-error');
+    const qty = parseFloat(document.getElementById('quick-food-qty').value) || 1;
+    const isToday = (viewDateOffset === 0);
+    const now = new Date();
+    const timeStr = isToday
+      ? `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`
+      : '手入力';
+    getViewData().logs.push({
+      name: n, qty,
+      cal: Math.round(quickSelectedBase.cal * qty),
+      fat: parseFloat((quickSelectedBase.fat * qty).toFixed(1)),
+      protein: parseFloat((quickSelectedBase.protein * qty).toFixed(1)),
+      carbs: parseFloat((quickSelectedBase.carbs * qty).toFixed(1)),
+      time: timeStr
+    });
+    saveData(); render(); renderWeek(); renderGraph();
+    closeQuickModalDirect();
+  }
+
   function addExercise() {
     const type = document.getElementById('exercise-type').value;
     const hours = parseFloat(document.getElementById('exercise-time').value);
@@ -1664,6 +1823,7 @@
   document.addEventListener('click', e => {
     if (e.target.id !== 'food-name') document.getElementById('suggest-list').style.display = 'none';
     if (e.target.id !== 'edit-food-name') document.getElementById('edit-suggest-list').style.display = 'none';
+    if (e.target.id !== 'quick-food-name') document.getElementById('quick-suggest-list').style.display = 'none';
   });
 
 // ==============================
