@@ -1956,7 +1956,15 @@ function closeCanEatModalDirect() {
   loadData();
   document.getElementById('exercise-type').addEventListener('change', updateExercisePreview);
   document.getElementById('exercise-time').addEventListener('input', updateExercisePreview);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
+  // 既存のService Workerを解除し、古いキャッシュを削除（キャッシュ問題の根本対処）
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => reg.unregister());
+    });
+    if (window.caches) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+  }
 </script>
 
 <!-- 今食べられるものモーダル -->
