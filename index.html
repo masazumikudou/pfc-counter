@@ -772,13 +772,13 @@
       text.trim().split('\n').forEach(line => {
         const parts = line.split(',');
         if (parts.length >= 5 && !line.startsWith('食品名')) {
-          menuDatabase.push({
-            name: parts[0].trim(),
-            cal: parseInt(parts[1]) || 0,
-            protein: parseFloat(parts[2]) || 0,
-            fat: parseFloat(parts[3]) || 0,
-            carbs: parseFloat(parts[4]) || 0
-          });
+      menuDatabase.push({
+  name: parts[0].trim(),
+  cal: parseInt(parts[1]) || 0,
+  protein: parseFloat(parts[2]) || 0,
+  fat: parseFloat(parts[3]) || 0,
+  carbs: parseFloat(parts[4]) || 0
+});
         }
       });
       document.getElementById('item-count').textContent = menuDatabase.length + ' ITEMS';
