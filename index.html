@@ -617,7 +617,6 @@
     </div>
     <div id="calc-preview" style="background:var(--cream);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-size:12px;margin-bottom:16px;line-height:2;display:none;"></div>
 
-    <!-- ▼ 追加：目標PFC手入力 -->
     <div class="settings-divider">目標PFC手入力（空欄なら自動計算）</div>
     <div class="status-grid">
       <div class="form-group">
@@ -639,7 +638,6 @@
         <input type="number" id="s-target-carbs" placeholder="自動" inputmode="numeric">
       </div>
     </div>
-    <!-- ▲ 追加ここまで -->
 
     <button class="btn-main" onclick="saveSettings()" style="margin-bottom:8px;">保存する</button>
   </div>
@@ -773,14 +771,14 @@
       text.trim().split('\n').forEach(line => {
         const parts = line.split(',');
         if (parts.length >= 5 && !line.startsWith('食品名')) {
-      menuDatabase.push({
-  name: parts[0].trim(),
-  cal: parseInt(parts[1]) || 0,
-  protein: parseFloat(parts[2]) || 0,
-  fat: parseFloat(parts[3]) || 0,
-  carbs: parseFloat(parts[4]) || 0,
-        category: parts[5] ? parts[5].trim() : ''
-});
+          menuDatabase.push({
+            name: parts[0].trim(),
+            cal: parseInt(parts[1]) || 0,
+            protein: parseFloat(parts[2]) || 0,
+            fat: parseFloat(parts[3]) || 0,
+            carbs: parseFloat(parts[4]) || 0,
+            category: parts[5] ? parts[5].trim() : ''
+          });
         }
       });
       document.getElementById('item-count').textContent = menuDatabase.length + ' ITEMS';
@@ -915,12 +913,10 @@
       document.getElementById('s-gender').value = profile.gender || 'male';
       document.getElementById('s-activity').value = profile.activity || '1.55';
       document.getElementById('s-target-weight').value = profile.targetWeight || '';
-      // ▼ 追加：目標PFC手入力値を復元
       document.getElementById('s-target-cal').value = profile.targetCalInput || '';
       document.getElementById('s-target-protein').value = profile.targetProteinInput || '';
       document.getElementById('s-target-fat').value = profile.targetFatInput || '';
       document.getElementById('s-target-carbs').value = profile.targetCarbsInput || '';
-      // ▲ 追加ここまで
     }
     document.getElementById('settings-modal').style.display = 'flex';
     updateCalcPreview();
@@ -953,12 +949,10 @@
     const activity = parseFloat(document.getElementById('s-activity').value);
     const targetWeight = parseFloat(document.getElementById('s-target-weight').value) || null;
     if (!height || !weight || !age) { alert('身長・体重・年齢を入力してください'); return; }
-    // ▼ 追加：目標PFC手入力値を保存
     const targetCalInput = parseInt(document.getElementById('s-target-cal').value) || null;
     const targetProteinInput = parseInt(document.getElementById('s-target-protein').value) || null;
     const targetFatInput = parseInt(document.getElementById('s-target-fat').value) || null;
     const targetCarbsInput = parseInt(document.getElementById('s-target-carbs').value) || null;
-    // ▲ 追加ここまで
     profile = { name, height, weight, age, gender, activity, targetWeight, targetCalInput, targetProteinInput, targetFatInput, targetCarbsInput };
     localStorage.setItem('pfc_profile', JSON.stringify(profile));
     document.getElementById('settings-modal').style.display = 'none';
@@ -1063,7 +1057,6 @@
   function getTodayData() { return getDateData(today()); }
   function getViewData() { return getDateData(getViewDate()); }
 
-  // ▼ 修正：手入力値優先、未入力なら自動計算にフォールバック
   function getTargets() {
     if (profile) {
       const auto = calcTargets(profile);
@@ -1078,7 +1071,6 @@
     }
     return { targetCal: 2000, targetFat: 55, targetProtein: 135, targetCarbs: 250, tdee: 2600 };
   }
-  // ▲ 修正ここまで
 
 // ==============================
 // SECTION 6: JS - UI
@@ -1610,13 +1602,13 @@
     renderGraph();
   }
 
+  // ★ 修正ポイント：未来日は0を返す
   function getDayValue(dateStr, metric) {
     if (dateStr > today()) return 0;
-
     const day = allData[dateStr];
     const intake = day ? day.logs.reduce((s, i) => s + i.cal, 0) : 0;
     if (metric === 'intake') return intake;
-    const burn = day ? calcTotalBurn(day.steps, profile, day.exercises) : 0;
+    const burn = day ? calcTotalBurn(day.steps, profile, day.exercises) : calcTotalBurn(0, profile, []);
     if (metric === 'burn') return burn;
     return burn - intake;
   }
@@ -1720,11 +1712,11 @@
   }
 
   function renderWeekChart(ctx, metric) {
-    const dateStrs = getWeekDateStrs(graphOffset);
     const todayStr = today();
+    const dateStrs = getWeekDateStrs(graphOffset);
     const dayLabels = ['月','火','水','木','金','土','日'];
     const data = dateStrs.map(ds => ds > todayStr ? null : getDayValue(ds, metric));
-    const total = data.reduce((s, v) => s + v, 0);
+    const total = data.reduce((s, v) => s + (v || 0), 0);
     const [sy, sm, sd] = dateStrs[0].split('-');
     const [ey, em, ed] = dateStrs[6].split('-');
     document.getElementById('graph-nav-range').textContent =
@@ -1736,6 +1728,7 @@
   }
 
   function renderMonthChart(ctx, metric) {
+    const todayStr = today();
     const base = new Date();
     base.setMonth(base.getMonth() + graphOffset, 1);
     const year = base.getFullYear();
@@ -1744,6 +1737,8 @@
     const weekMap = new Map();
     for (let day = 1; day <= daysInMonth; day++) {
       const d = new Date(year, month, day);
+      const ds = dateStrFromDate(d);
+      if (ds > todayStr) break;
       const dow = d.getDay();
       const mondayOffset = (dow === 0) ? -6 : 1 - dow;
       const monday = new Date(d);
@@ -1762,13 +1757,8 @@
     }
     const weeks = Array.from(weekMap.values());
     const labels = weeks.map(w => w.label);
-const todayStr = today();
-const data = weeks.map(w => w.days.reduce((s, ds) => s + (ds > todayStr ? 0 : getDayValue(ds, metric)), 0));
-    let monthTotal = 0;
-    for (let day = 1; day <= daysInMonth; day++) {
-const ds = dateStrFromDate(new Date(year, month, day));
-if (ds <= todayStr) monthTotal += getDayValue(ds, metric);
-    }
+    const data = weeks.map(w => w.days.reduce((s, ds) => s + getDayValue(ds, metric), 0));
+    let monthTotal = data.reduce((s, v) => s + v, 0);
     document.getElementById('graph-nav-range').textContent = `${year}年 ${month + 1}月`;
     updateNavTotal(metric, monthTotal, '月合計');
     document.getElementById('graph-prev-btn').disabled = graphOffset <= -GRAPH_NAV_LIMIT;
@@ -1900,8 +1890,7 @@ if (ds <= todayStr) monthTotal += getDayValue(ds, metric);
     reader.readAsText(file);
   }
 
-  // 初期化
- // ===== 今食べられるもの =====
+// ===== 今食べられるもの =====
 function openCanEatModal() {
   const targets = getTargets();
   const d = getViewData();
@@ -1961,13 +1950,16 @@ function closeCanEatModal(e) {
 function closeCanEatModalDirect() {
   document.getElementById('can-eat-overlay').classList.remove('open');
 }
+
+  // 初期化
   loadCSV();
   loadData();
   document.getElementById('exercise-type').addEventListener('change', updateExercisePreview);
   document.getElementById('exercise-time').addEventListener('input', updateExercisePreview);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
 </script>
-  <!-- 今食べられるものモーダル -->
+
+<!-- 今食べられるものモーダル -->
 <div class="quick-modal-overlay" id="can-eat-overlay" onclick="closeCanEatModal(event)">
   <div class="quick-modal">
     <div class="quick-modal-title">今食べられるもの</div>
