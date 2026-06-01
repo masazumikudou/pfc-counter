@@ -1760,10 +1760,12 @@
     }
     const weeks = Array.from(weekMap.values());
     const labels = weeks.map(w => w.label);
-    const data = weeks.map(w => w.days.reduce((s, ds) => s + getDayValue(ds, metric), 0));
+const todayStr = today();
+const data = weeks.map(w => w.days.reduce((s, ds) => s + (ds > todayStr ? 0 : getDayValue(ds, metric)), 0));
     let monthTotal = 0;
     for (let day = 1; day <= daysInMonth; day++) {
-      monthTotal += getDayValue(dateStrFromDate(new Date(year, month, day)), metric);
+const ds = dateStrFromDate(new Date(year, month, day));
+if (ds <= todayStr) monthTotal += getDayValue(ds, metric);
     }
     document.getElementById('graph-nav-range').textContent = `${year}年 ${month + 1}月`;
     updateNavTotal(metric, monthTotal, '月合計');
