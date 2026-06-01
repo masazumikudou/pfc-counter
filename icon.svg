@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" fill="white"/>
+
+  <!-- PFC -->
+  <text x="96" y="36"
+    font-family="Arial Black, sans-serif"
+    font-size="30" font-weight="900"
+    text-anchor="middle" fill="#111"
+    letter-spacing="4">PFC</text>
+
+  <!-- 皿 -->
+  <circle cx="96" cy="118" r="52" fill="none" stroke="#111" stroke-width="5"/>
+  <circle cx="96" cy="118" r="37" fill="none" stroke="#111" stroke-width="2.5"/>
+
+  <!-- フォーク -->
+  <line x1="29" y1="50" x2="29" y2="76" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="36" y1="48" x2="36" y2="76" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="43" y1="50" x2="43" y2="76" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M29,75 Q36,84 43,75" fill="none" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="36" y1="83" x2="36" y2="162" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- ナイフ -->
+  <path d="M153,48 L153,108 L159,108 L159,52 Q159,46 156,46 Q153,46 153,48 Z" fill="#111"/>
+  <rect x="152" y="108" width="8" height="54" rx="4" fill="#111"/>
+</svg>
