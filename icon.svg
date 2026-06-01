@@ -1,25 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
-  <rect width="192" height="192" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background -->
+  <circle cx="50" cy="50" r="50" fill="#E60012"/>
+
+  <!-- Fork (left, tilted -22deg) -->
+  <g transform="rotate(-22, 35, 46)" fill="white">
+    <rect x="30"   y="16" width="2.5" height="20" rx="1.25"/>
+    <rect x="33.5" y="16" width="2.5" height="20" rx="1.25"/>
+    <rect x="37"   y="16" width="2.5" height="20" rx="1.25"/>
+    <rect x="32.5" y="34" width="5"   height="36" rx="2.5"/>
+  </g>
+
+  <!-- Knife (right, tilted +22deg) -->
+  <g transform="rotate(22, 65, 46)" fill="white">
+    <path d="M65,16 L69,51 L61,51 Z"/>
+    <rect x="60.5" y="51" width="9" height="3.5" rx="0.5"/>
+    <rect x="62.5" y="54.5" width="5" height="19" rx="2.5"/>
+  </g>
 
   <!-- PFC -->
-  <text x="96" y="36"
-    font-family="Arial Black, sans-serif"
-    font-size="30" font-weight="900"
-    text-anchor="middle" fill="#111"
-    letter-spacing="4">PFC</text>
-
-  <!-- 皿 -->
-  <circle cx="96" cy="118" r="52" fill="none" stroke="#111" stroke-width="5"/>
-  <circle cx="96" cy="118" r="37" fill="none" stroke="#111" stroke-width="2.5"/>
-
-  <!-- フォーク -->
-  <line x1="29" y1="50" x2="29" y2="76" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>
-  <line x1="36" y1="48" x2="36" y2="76" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>
-  <line x1="43" y1="50" x2="43" y2="76" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>
-  <path d="M29,75 Q36,84 43,75" fill="none" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>
-  <line x1="36" y1="83" x2="36" y2="162" stroke="#111" stroke-width="6" stroke-linecap="round"/>
-
-  <!-- ナイフ -->
-  <line x1="155" y1="108" x2="155" y2="162" stroke="#111" stroke-width="6" stroke-linecap="round"/>
-  <path d="M152,50 Q152,45 155,45 Q158,45 158,50 L158,108 L152,108 Z" fill="#111"/>
+  <text x="50" y="91"
+        text-anchor="middle"
+        fill="white"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-size="12"
+        font-weight="900"
+        letter-spacing="3">PFC</text>
 </svg>
