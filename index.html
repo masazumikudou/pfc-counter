@@ -224,6 +224,9 @@
     .edit-log-del { background: var(--red); color: white; border: 2px solid var(--ink); border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 900; cursor: pointer; }
     .edit-add-section { margin-top: 14px; }
     .edit-close-btn { width: 100%; background: var(--ink); color: white; border: none; border-radius: 14px; padding: 12px; font-size: 15px; font-weight: 900; cursor: pointer; margin-top: 14px; }
+
+    /* 目標PFC区切り */
+    .settings-divider { font-size: 12px; font-weight: 900; color: var(--muted); border-top: 2px solid var(--cream); padding-top: 12px; margin-top: 4px; margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -358,7 +361,6 @@
       <div class="form-group" style="margin-bottom:0;">
         <label>数量 <span class="badge">倍率</span></label>
         <input type="number" id="food-qty" value="1" step="0.1" min="0.1" inputmode="decimal" onfocus="this.select()">
-
       </div>
       <div class="form-group" style="margin-bottom:0;">
         <label>カロリー (kcal)</label>
@@ -522,9 +524,7 @@
 <!-- フローティング食事入力ボタン -->
 <div class="fab" id="food-fab" onclick="openQuickModal()" aria-label="食事を入力">
   <svg viewBox="0 0 24 24" fill="#8A7368" xmlns="http://www.w3.org/2000/svg">
-    <!-- フォーク（ソリッド塗り） -->
     <path d="M6.4 2.2c-.5 0-.9.4-.9.9V8c0 .35-.28.65-.63.65S4.25 8.35 4.25 8V3.1a.9.9 0 0 0-1.8 0v5.3c0 1.5.95 2.78 2.28 3.27.42.16.67.57.62 1.02l-.95 7.9a1.2 1.2 0 0 0 2.39 0l-.95-7.9c-.05-.45.2-.86.62-1.02C8.3 11.18 9.25 9.9 9.25 8.4V3.1a.9.9 0 0 0-1.8 0V8c0 .35-.28.65-.62.65-.35 0-.63-.3-.63-.65V3.1c0-.5-.4-.9-.9-.9h.5z"/>
-    <!-- スプーン（ソリッド塗り） -->
     <path d="M16.8 2.2c-1.9 0-3.6 2.1-3.6 4.9 0 2.1 1.2 3.6 2.55 4.15.42.17.67.58.62 1.02l-.92 7.74a1.3 1.3 0 0 0 2.6 0l-.92-7.74c-.05-.44.2-.85.62-1.02C19.4 10.7 20.6 9.2 20.6 7.1c0-2.8-1.7-4.9-3.6-4.9z"/>
   </svg>
 </div>
@@ -614,6 +614,31 @@
       <input type="number" id="s-target-weight" placeholder="65" inputmode="decimal" step="0.1">
     </div>
     <div id="calc-preview" style="background:var(--cream);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-size:12px;margin-bottom:16px;line-height:2;display:none;"></div>
+
+    <!-- ▼ 追加：目標PFC手入力 -->
+    <div class="settings-divider">目標PFC手入力（空欄なら自動計算）</div>
+    <div class="status-grid">
+      <div class="form-group">
+        <label style="font-size:12px;">目標カロリー (kcal)</label>
+        <input type="number" id="s-target-cal" placeholder="自動" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;">目標P (g)</label>
+        <input type="number" id="s-target-protein" placeholder="自動" inputmode="numeric">
+      </div>
+    </div>
+    <div class="status-grid">
+      <div class="form-group">
+        <label style="font-size:12px;">目標F (g)</label>
+        <input type="number" id="s-target-fat" placeholder="自動" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;">目標C (g)</label>
+        <input type="number" id="s-target-carbs" placeholder="自動" inputmode="numeric">
+      </div>
+    </div>
+    <!-- ▲ 追加ここまで -->
+
     <button class="btn-main" onclick="saveSettings()" style="margin-bottom:8px;">保存する</button>
   </div>
 </div>
@@ -777,7 +802,6 @@
             protein: parseFloat(parts[5]) || 0,
             fat: parseFloat(parts[6]) || 0,
             carbs: parseFloat(parts[7]) || 0
-
           });
         }
       });
@@ -888,6 +912,12 @@
       document.getElementById('s-gender').value = profile.gender || 'male';
       document.getElementById('s-activity').value = profile.activity || '1.55';
       document.getElementById('s-target-weight').value = profile.targetWeight || '';
+      // ▼ 追加：目標PFC手入力値を復元
+      document.getElementById('s-target-cal').value = profile.targetCalInput || '';
+      document.getElementById('s-target-protein').value = profile.targetProteinInput || '';
+      document.getElementById('s-target-fat').value = profile.targetFatInput || '';
+      document.getElementById('s-target-carbs').value = profile.targetCarbsInput || '';
+      // ▲ 追加ここまで
     }
     document.getElementById('settings-modal').style.display = 'flex';
     updateCalcPreview();
@@ -902,7 +932,7 @@
     if (h && w && a) {
       const t = calcTargets({ height: h, weight: w, age: a, gender: g, activity: act });
       preview.style.display = 'block';
-      preview.innerHTML = `基礎代謝: <b>${t.bmr}kcal</b> / 消費目安: <b>${t.tdee}kcal</b><br>摂取目標: <b>${t.targetCal}kcal</b>（15%カット）<br>P: <b>${t.targetProtein}g</b> / F: <b>${t.targetFat}g</b> / C: <b>${t.targetCarbs}g</b>`;
+      preview.innerHTML = `基礎代謝: <b>${t.bmr}kcal</b> / 消費目安: <b>${t.tdee}kcal</b><br>自動計算: <b>${t.targetCal}kcal</b>（15%カット）<br>P: <b>${t.targetProtein}g</b> / F: <b>${t.targetFat}g</b> / C: <b>${t.targetCarbs}g</b>`;
     } else {
       preview.style.display = 'none';
     }
@@ -910,6 +940,7 @@
   ['s-height','s-weight','s-age','s-gender','s-activity'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateCalcPreview);
   });
+
   function saveSettings() {
     const name = document.getElementById('s-name').value.trim();
     const height = parseFloat(document.getElementById('s-height').value);
@@ -919,7 +950,13 @@
     const activity = parseFloat(document.getElementById('s-activity').value);
     const targetWeight = parseFloat(document.getElementById('s-target-weight').value) || null;
     if (!height || !weight || !age) { showError('food-error', '身長・体重・年齢を入力してください'); return; }
-    profile = { name, height, weight, age, gender, activity, targetWeight };
+    // ▼ 追加：目標PFC手入力値を保存
+    const targetCalInput = parseInt(document.getElementById('s-target-cal').value) || null;
+    const targetProteinInput = parseInt(document.getElementById('s-target-protein').value) || null;
+    const targetFatInput = parseInt(document.getElementById('s-target-fat').value) || null;
+    const targetCarbsInput = parseInt(document.getElementById('s-target-carbs').value) || null;
+    // ▲ 追加ここまで
+    profile = { name, height, weight, age, gender, activity, targetWeight, targetCalInput, targetProteinInput, targetFatInput, targetCarbsInput };
     localStorage.setItem('pfc_profile', JSON.stringify(profile));
     document.getElementById('settings-modal').style.display = 'none';
     renderProfile();
@@ -936,7 +973,7 @@
     }
     document.getElementById('profile-card').style.display = 'block';
     document.getElementById('weight-card').style.display = 'block';
-    const t = calcTargets(profile);
+    const t = getTargets();
     const actLabel = { '1.2': '低い', '1.55': '中程度', '1.725': '高い', '1.9': '非常に高い' };
     document.getElementById('profile-name').textContent = profile.name || 'プロフィール';
     document.getElementById('profile-summary').innerHTML =
@@ -1023,10 +1060,22 @@
   function getTodayData() { return getDateData(today()); }
   function getViewData() { return getDateData(getViewDate()); }
 
+  // ▼ 修正：手入力値優先、未入力なら自動計算にフォールバック
   function getTargets() {
-    if (profile) return calcTargets(profile);
+    if (profile) {
+      const auto = calcTargets(profile);
+      return {
+        bmr: auto.bmr,
+        tdee: auto.tdee,
+        targetCal: profile.targetCalInput || auto.targetCal,
+        targetProtein: profile.targetProteinInput || auto.targetProtein,
+        targetFat: profile.targetFatInput || auto.targetFat,
+        targetCarbs: profile.targetCarbsInput || auto.targetCarbs,
+      };
+    }
     return { targetCal: 2000, targetFat: 55, targetProtein: 135, targetCarbs: 250, tdee: 2600 };
   }
+  // ▲ 修正ここまで
 
 // ==============================
 // SECTION 6: JS - UI
@@ -1086,7 +1135,6 @@
     document.getElementById('walk-burn-cal').innerText = walkBurn.toLocaleString();
     document.getElementById('burn-cal').innerText = totalBurn.toLocaleString();
 
-    // 収支バー更新
     const balance = totalBurn - tCal;
     document.getElementById('bar-intake').textContent = tCal.toLocaleString() + 'kcal';
     document.getElementById('bar-burn').textContent = totalBurn.toLocaleString() + 'kcal';
@@ -1107,7 +1155,6 @@
       barEl.style.borderColor = 'var(--red)';
     }
 
-    // 運動ログ表示
     const exContainer = document.getElementById('exercise-log-container');
     exContainer.innerHTML = '';
     if (d.exercises && d.exercises.length) {
@@ -1375,7 +1422,6 @@
   let quickSelectedBase = { cal: 0, fat: 0, protein: 0, carbs: 0 };
 
   function openQuickModal() {
-    // 表示日に合わせる
     const d = new Date();
     d.setDate(d.getDate() + viewDateOffset);
     const dayNames = ['日','月','火','水','木','金','土'];
@@ -1525,21 +1571,17 @@
 // SECTION 7: JS - グラフ
 // ==============================
 
-  // グラフ状態
-  let graphTab = 'intake';      // weight / intake / burn / balance
-  let graphPeriod = 'day';      // day / week / month
-  let graphOffset = 0;          // 0=最新, -1=1つ前... （週/月ナビ用）
+  let graphTab = 'intake';
+  let graphPeriod = 'day';
+  let graphOffset = 0;
+  const GRAPH_NAV_LIMIT = 11;
 
-  const GRAPH_NAV_LIMIT = 11;   // 何個前まで遡れるか（週/月とも）
-
-  // タブ切替
   function selectGraphTab(tab) {
     graphTab = tab;
     graphOffset = 0;
     ['weight','intake','burn','balance'].forEach(t => {
       document.getElementById('tab-' + t).classList.toggle('active', t === tab);
     });
-    // 体重は期間ボタン非表示
     const periodBar = document.getElementById('graph-period-bar');
     if (tab === 'weight') {
       periodBar.classList.add('hidden');
@@ -1549,7 +1591,6 @@
     renderGraph();
   }
 
-  // 期間切替
   function selectGraphPeriod(period) {
     graphPeriod = period;
     graphOffset = 0;
@@ -1559,7 +1600,6 @@
     renderGraph();
   }
 
-  // 前後ナビ（週/月のみ）
   function changeGraphOffset(dir) {
     const next = graphOffset + dir;
     if (next > 0 || next < -GRAPH_NAV_LIMIT) return;
@@ -1567,18 +1607,15 @@
     renderGraph();
   }
 
-  // ===== 集計ヘルパー =====
-  // 指定日の摂取/消費/収支を返す
   function getDayValue(dateStr, metric) {
     const day = allData[dateStr];
     const intake = day ? day.logs.reduce((s, i) => s + i.cal, 0) : 0;
     if (metric === 'intake') return intake;
     const burn = calcTotalBurn(day ? day.steps : 0, profile, day ? day.exercises : []);
     if (metric === 'burn') return burn;
-    return burn - intake; // balance
+    return burn - intake;
   }
 
-  // offset週の月曜起点7日間の日付配列を返す（offset=0が今週）
   function getWeekDateStrs(offset) {
     const now = new Date();
     const dow = now.getDay();
@@ -1595,7 +1632,6 @@
     return arr;
   }
 
-  // 直近30日（日別グラフ用）
   function getLast30Days() {
     const days = [];
     for (let i = 29; i >= 0; i--) {
@@ -1605,44 +1641,32 @@
     return days;
   }
 
-  // メトリック別の色
   function metricColor(metric) {
     if (metric === 'intake') return '#E60012';
     if (metric === 'burn') return '#43B047';
     return '#2A6FD6';
   }
 
-  // ===== メイン描画 =====
   function renderGraph() {
     const ctx = document.getElementById('mainChart').getContext('2d');
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-
     const nav = document.getElementById('graph-nav');
-
-    // --- 体重（期間なし・推移1本） ---
     if (graphTab === 'weight') {
       nav.classList.add('hidden');
       renderWeightChart(ctx);
       return;
     }
-
-    const metric = graphTab; // intake / burn / balance
-
-    // --- 日別（直近30日・ナビなし） ---
+    const metric = graphTab;
     if (graphPeriod === 'day') {
       nav.classList.add('hidden');
       renderDayChart(ctx, metric);
       return;
     }
-
-    // --- 週別（月〜日の7本＋週合計・ナビあり） ---
     if (graphPeriod === 'week') {
       nav.classList.remove('hidden');
       renderWeekChart(ctx, metric);
       return;
     }
-
-    // --- 月別（週次バー＋月合計・ナビあり） ---
     if (graphPeriod === 'month') {
       nav.classList.remove('hidden');
       renderMonthChart(ctx, metric);
@@ -1650,7 +1674,6 @@
     }
   }
 
-  // 体重推移
   function renderWeightChart(ctx) {
     const days = getLast30Days();
     const labels = days.map(d => d.slice(5));
@@ -1684,7 +1707,6 @@
     });
   }
 
-  // 日別（直近30日）
   function renderDayChart(ctx, metric) {
     const days = getLast30Days();
     const labels = days.map(d => d.slice(5));
@@ -1692,14 +1714,11 @@
     buildBarChart(ctx, labels, data, metric, true);
   }
 
-  // 週別（月〜日の7本＋週合計）
   function renderWeekChart(ctx, metric) {
     const dateStrs = getWeekDateStrs(graphOffset);
     const dayLabels = ['月','火','水','木','金','土','日'];
     const data = dateStrs.map(ds => getDayValue(ds, metric));
     const total = data.reduce((s, v) => s + v, 0);
-
-    // ナビ表示更新
     const [sy, sm, sd] = dateStrs[0].split('-');
     const [ey, em, ed] = dateStrs[6].split('-');
     document.getElementById('graph-nav-range').textContent =
@@ -1707,21 +1726,16 @@
     updateNavTotal(metric, total, '週合計');
     document.getElementById('graph-prev-btn').disabled = graphOffset <= -GRAPH_NAV_LIMIT;
     document.getElementById('graph-next-btn').disabled = graphOffset >= 0;
-
     buildBarChart(ctx, dayLabels, data, metric, false);
   }
 
-  // 月別（offset月に含まれる各週を月曜起点7日フルで集計）
   function renderMonthChart(ctx, metric) {
     const base = new Date();
     base.setMonth(base.getMonth() + graphOffset, 1);
     const year = base.getFullYear();
-    const month = base.getMonth(); // 0-indexed
+    const month = base.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // この月の日が属する「月曜起点の週」をユニークに集める
-    // 各週は月をまたいでも7日フルで集計する
-    const weekMap = new Map(); // mondayDateStr -> { label, days:[7日分dateStr] }
+    const weekMap = new Map();
     for (let day = 1; day <= daysInMonth; day++) {
       const d = new Date(year, month, day);
       const dow = d.getDay();
@@ -1740,27 +1754,20 @@
         weekMap.set(mKey, { label: `${monday.getMonth() + 1}/${monday.getDate()}週`, days: days7 });
       }
     }
-
     const weeks = Array.from(weekMap.values());
     const labels = weeks.map(w => w.label);
-    // バー＝各週7日フル合計
     const data = weeks.map(w => w.days.reduce((s, ds) => s + getDayValue(ds, metric), 0));
-
-    // 月合計＝月内の日だけ（二重計上を避ける）
     let monthTotal = 0;
     for (let day = 1; day <= daysInMonth; day++) {
       monthTotal += getDayValue(dateStrFromDate(new Date(year, month, day)), metric);
     }
-
     document.getElementById('graph-nav-range').textContent = `${year}年 ${month + 1}月`;
     updateNavTotal(metric, monthTotal, '月合計');
     document.getElementById('graph-prev-btn').disabled = graphOffset <= -GRAPH_NAV_LIMIT;
     document.getElementById('graph-next-btn').disabled = graphOffset >= 0;
-
     buildBarChart(ctx, labels, data, metric, false);
   }
 
-  // ナビの合計表示（収支は色分け＆アンダー/オーバー表記）
   function updateNavTotal(metric, total, prefix) {
     const el = document.getElementById('graph-nav-total');
     if (metric === 'balance') {
@@ -1777,7 +1784,6 @@
     }
   }
 
-  // 棒グラフ共通ビルダー（収支は正負で色分け）
   function buildBarChart(ctx, labels, data, metric, rotate) {
     let bg, border;
     if (metric === 'balance') {
