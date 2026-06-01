@@ -1611,6 +1611,8 @@
   }
 
   function getDayValue(dateStr, metric) {
+    if (dateStr > today()) return 0;
+
     const day = allData[dateStr];
     const intake = day ? day.logs.reduce((s, i) => s + i.cal, 0) : 0;
     if (metric === 'intake') return intake;
