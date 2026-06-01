@@ -1719,8 +1719,9 @@
 
   function renderWeekChart(ctx, metric) {
     const dateStrs = getWeekDateStrs(graphOffset);
+    const todayStr = today();
     const dayLabels = ['月','火','水','木','金','土','日'];
-    const data = dateStrs.map(ds => getDayValue(ds, metric));
+    const data = dateStrs.map(ds => ds > todayStr ? null : getDayValue(ds, metric));
     const total = data.reduce((s, v) => s + v, 0);
     const [sy, sm, sd] = dateStrs[0].split('-');
     const [ey, em, ed] = dateStrs[6].split('-');
