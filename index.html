@@ -951,7 +951,7 @@
     const gender = document.getElementById('s-gender').value;
     const activity = parseFloat(document.getElementById('s-activity').value);
     const targetWeight = parseFloat(document.getElementById('s-target-weight').value) || null;
-    if (!height || !weight || !age) { showError('food-error', '身長・体重・年齢を入力してください'); return; }
+    if (!height || !weight || !age) { alert('身長・体重・年齢を入力してください'); return; }
     // ▼ 追加：目標PFC手入力値を保存
     const targetCalInput = parseInt(document.getElementById('s-target-cal').value) || null;
     const targetProteinInput = parseInt(document.getElementById('s-target-protein').value) || null;
@@ -1207,7 +1207,7 @@
   function addLog() {
     const n = document.getElementById('food-name').value.trim();
     if (!n) { showError('food-error', '食べたものを入力してください'); return; }
-    if (!selectedBase.cal && selectedBase.cal !== 0) { showError('food-error', '食べたものを検索して選んでください'); return; }
+    if (!selectedBase.cal) { showError('food-error', '食べたものを検索して選んでください'); return; }
     hideError('food-error');
     const qty = parseFloat(document.getElementById('food-qty').value) || 1;
     const c = parseInt(document.getElementById('food-cal').value) || 0;
