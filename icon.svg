@@ -20,6 +20,6 @@
   <line x1="36" y1="83" x2="36" y2="162" stroke="#111" stroke-width="6" stroke-linecap="round"/>
 
   <!-- ナイフ -->
-  <path d="M153,48 L153,108 L159,108 L159,52 Q159,46 156,46 Q153,46 153,48 Z" fill="#111"/>
-  <rect x="152" y="108" width="8" height="54" rx="4" fill="#111"/>
+  <line x1="155" y1="108" x2="155" y2="162" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+  <path d="M152,50 Q152,45 155,45 Q158,45 158,50 L158,108 L152,108 Z" fill="#111"/>
 </svg>
