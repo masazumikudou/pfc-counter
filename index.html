@@ -1614,7 +1614,7 @@
     const day = allData[dateStr];
     const intake = day ? day.logs.reduce((s, i) => s + i.cal, 0) : 0;
     if (metric === 'intake') return intake;
-    const burn = calcTotalBurn(day ? day.steps : 0, profile, day ? day.exercises : []);
+    const burn = day ? calcTotalBurn(day.steps, profile, day.exercises) : 0;
     if (metric === 'burn') return burn;
     return burn - intake;
   }
