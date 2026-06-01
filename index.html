@@ -777,7 +777,8 @@
   cal: parseInt(parts[1]) || 0,
   protein: parseFloat(parts[2]) || 0,
   fat: parseFloat(parts[3]) || 0,
-  carbs: parseFloat(parts[4]) || 0
+  carbs: parseFloat(parts[4]) || 0,
+        category: parts[5] ? parts[5].trim() : ''
 });
         }
       });
