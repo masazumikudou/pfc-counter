@@ -1894,10 +1894,84 @@
   }
 
   // 初期化
+ // ===== 今食べられるもの =====
+function openCanEatModal() {
+  const targets = getTargets();
+  const d = getViewData();
+  let tCal = 0, tFat = 0;
+  d.logs.forEach(i => { tCal += i.cal; tFat += i.fat; });
+  const remCal = targets.targetCal - tCal;
+  const remFat = targets.targetFat - tFat;
+
+  document.getElementById('can-eat-remaining').textContent =
+    `残りカロリー: ${remCal}kcal / 残りF: ${remFat.toFixed(1)}g`;
+
+  const sel = document.getElementById('can-eat-category');
+  if (sel.options.length === 1) {
+    const cats = [...new Set(menuDatabase.map(i => i.category).filter(Boolean))];
+    cats.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  }
+
+  document.getElementById('can-eat-overlay').classList.add('open');
+  renderCanEatList();
+}
+
+function renderCanEatList() {
+  const targets = getTargets();
+  const d = getViewData();
+  let tCal = 0, tFat = 0;
+  d.logs.forEach(i => { tCal += i.cal; tFat += i.fat; });
+  const remCal = targets.targetCal - tCal;
+  const remFat = targets.targetFat - tFat;
+  const category = document.getElementById('can-eat-category').value;
+
+  const filtered = menuDatabase.filter(i =>
+    i.cal <= remCal &&
+    i.fat <= remFat &&
+    (!category || i.category === category)
+  ).sort((a, b) => b.cal - a.cal).slice(0, 50);
+
+  const container = document.getElementById('can-eat-list');
+  if (!filtered.length) {
+    container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;">該当なし</div>';
+    return;
+  }
+  container.innerHTML = filtered.map(i =>
+    `<div class="log-item">
+      <div style="flex:1;"><b>${i.name}</b>${i.category ? `<br><small style="color:var(--muted);">${i.category}</small>` : ''}</div>
+      <div class="log-values">${i.cal}kcal / F:${i.fat}g</div>
+    </div>`
+  ).join('');
+}
+
+function closeCanEatModal(e) {
+  if (e.target === document.getElementById('can-eat-overlay')) closeCanEatModalDirect();
+}
+function closeCanEatModalDirect() {
+  document.getElementById('can-eat-overlay').classList.remove('open');
+}
   loadCSV();
   loadData();
   document.getElementById('exercise-type').addEventListener('change', updateExercisePreview);
   document.getElementById('exercise-time').addEventListener('input', updateExercisePreview);
 </script>
+  <!-- 今食べられるものモーダル -->
+<div class="quick-modal-overlay" id="can-eat-overlay" onclick="closeCanEatModal(event)">
+  <div class="quick-modal">
+    <div class="quick-modal-title">今食べられるもの</div>
+    <div style="font-size:12px;font-weight:900;color:var(--muted);text-align:center;margin-bottom:14px;" id="can-eat-remaining"></div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <select id="can-eat-category" onchange="renderCanEatList()">
+        <option value="">すべての大分類</option>
+      </select>
+    </div>
+    <div id="can-eat-list" style="max-height:50vh;overflow-y:auto;"></div>
+    <button class="edit-close-btn" onclick="closeCanEatModalDirect()">とじる</button>
+  </div>
+</div>
 </body>
 </html>
