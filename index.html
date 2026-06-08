@@ -99,7 +99,7 @@
     .log-del-btn { background: var(--red); color: white; border: 2px solid var(--ink); border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 900; cursor: pointer; margin-left: 8px; flex-shrink: 0; }
 
     /* グラフタブ */
-    .graph-tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+    .graph-tab-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
     .graph-tab-btn { padding: 9px 2px; border: 3px solid var(--ink); border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer; background: #f0f0f0; text-align: center; }
     .graph-tab-btn.active { background: var(--ink); color: white; box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
 
@@ -450,6 +450,7 @@
       <div class="graph-tab-btn active" id="tab-intake" onclick="selectGraphTab('intake')">摂取</div>
       <div class="graph-tab-btn" id="tab-burn" onclick="selectGraphTab('burn')">消費</div>
       <div class="graph-tab-btn" id="tab-balance" onclick="selectGraphTab('balance')">収支</div>
+      <div class="graph-tab-btn" id="tab-steps" onclick="selectGraphTab('steps')">歩数</div>
     </div>
     <div class="graph-period-bar" id="graph-period-bar">
       <div class="graph-period-btn active" id="period-day" onclick="selectGraphPeriod('day')">日</div>
@@ -1574,7 +1575,7 @@
   function selectGraphTab(tab) {
     graphTab = tab;
     graphOffset = 0;
-    ['weight','intake','burn','balance'].forEach(t => {
+    ['weight','intake','burn','balance','steps'].forEach(t => {
       document.getElementById('tab-' + t).classList.toggle('active', t === tab);
     });
     const periodBar = document.getElementById('graph-period-bar');
@@ -1610,6 +1611,7 @@
     if (metric === 'intake') return intake;
     const burn = day ? calcTotalBurn(day.steps, profile, day.exercises) : 0;
     if (metric === 'burn') return burn;
+    if (metric === 'steps') return day ? (day.steps || 0) : 0;
     return burn - intake;
   }
 
@@ -1641,6 +1643,7 @@
   function metricColor(metric) {
     if (metric === 'intake') return '#E60012';
     if (metric === 'burn') return '#43B047';
+    if (metric === 'steps') return '#FF9F00';
     return '#2A6FD6';
   }
 
@@ -1760,15 +1763,31 @@
     const data = weeks.map(w => w.days.reduce((s, ds) => s + getDayValue(ds, metric), 0));
     let monthTotal = data.reduce((s, v) => s + v, 0);
     document.getElementById('graph-nav-range').textContent = `${year}年 ${month + 1}月`;
-    updateNavTotal(metric, monthTotal, '月合計');
+    if (metric === 'steps') {
+      let daysWithSteps = 0;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const ds = dateStrFromDate(new Date(year, month, d));
+        if (ds > todayStr) break;
+        if (allData[ds] && allData[ds].steps > 0) daysWithSteps++;
+      }
+      const avg = daysWithSteps > 0 ? Math.round(monthTotal / daysWithSteps) : 0;
+      updateNavTotal(metric, monthTotal, '月合計', avg);
+    } else {
+      updateNavTotal(metric, monthTotal, '月合計');
+    }
     document.getElementById('graph-prev-btn').disabled = graphOffset <= -GRAPH_NAV_LIMIT;
     document.getElementById('graph-next-btn').disabled = graphOffset >= 0;
     buildBarChart(ctx, labels, data, metric, false);
   }
 
-  function updateNavTotal(metric, total, prefix) {
+  function updateNavTotal(metric, total, prefix, avg) {
     const el = document.getElementById('graph-nav-total');
-    if (metric === 'balance') {
+    if (metric === 'steps') {
+      let text = `${prefix} ${total.toLocaleString()}歩`;
+      if (avg !== undefined) text += `  平均 ${avg.toLocaleString()}歩/日`;
+      el.textContent = text;
+      el.style.color = metricColor('steps');
+    } else if (metric === 'balance') {
       if (total >= 0) {
         el.textContent = `${prefix} アンダー +${total.toLocaleString()}kcal`;
         el.style.color = 'var(--green)';
@@ -1806,6 +1825,7 @@
             callbacks: {
               label: ctx => {
                 const v = ctx.parsed.y;
+                if (metric === 'steps') return v.toLocaleString() + '歩';
                 if (metric === 'balance') {
                   return (v >= 0 ? 'アンダー +' : 'オーバー ') + Math.abs(v).toLocaleString() + 'kcal';
                 }
@@ -1816,7 +1836,7 @@
         },
         scales: {
           x: { ticks: { font: { size: 9 }, maxRotation: rotate ? 45 : 0 } },
-          y: { ticks: { font: { size: 10 }, callback: v => v + 'kcal' } }
+          y: { ticks: { font: { size: 10 }, callback: v => v + (metric === 'steps' ? '歩' : 'kcal') } }
         }
       }
     });
