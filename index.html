@@ -1724,7 +1724,13 @@
     const [ey, em, ed] = dateStrs[6].split('-');
     document.getElementById('graph-nav-range').textContent =
       `${parseInt(sm)}/${parseInt(sd)} 〜 ${parseInt(em)}/${parseInt(ed)}`;
-    updateNavTotal(metric, total, '週合計');
+    if (metric === 'steps') {
+      const daysWithSteps = dateStrs.filter(ds => ds <= todayStr && allData[ds] && allData[ds].steps > 0).length;
+      const avg = daysWithSteps > 0 ? Math.round(total / daysWithSteps) : 0;
+      updateNavTotal(metric, total, '週合計', avg);
+    } else {
+      updateNavTotal(metric, total, '週合計');
+    }
     document.getElementById('graph-prev-btn').disabled = graphOffset <= -GRAPH_NAV_LIMIT;
     document.getElementById('graph-next-btn').disabled = graphOffset >= 0;
     buildBarChart(ctx, dayLabels, data, metric, false);
