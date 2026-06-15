@@ -1236,33 +1236,56 @@
   }
 
 // ===== リマインダー =====
-function updateReminderBadge() {
-  const messages = getReminderMessages();
-  const badge = document.getElementById('reminder-badge');
-  badge.style.display = messages.length > 0 ? 'inline-flex' : 'none';
-  if (messages.length === 0) document.getElementById('reminder-popup').style.display = 'none';
-}
-
-function getReminderMessages() {
-  const messages = [];
+function getReminderData() {
+  const foodMissing = [];
+  const stepsMissing = [];
   for (let i = 1; i <= 7; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = dateStrFromDate(d);
     const label = `${d.getMonth()+1}/${d.getDate()}`;
     const day = allData[dateStr];
-    if (!day || day.logs.length === 0) messages.push(`${label} 食事入力をお忘れですか？`);
-    if (!day || !day.steps) messages.push(`${label} 歩数入力をお忘れですか？`);
+    if (!day || day.logs.length === 0) foodMissing.push({ label, offset: -i });
+    if (!day || !day.steps) stepsMissing.push({ label, offset: -i });
   }
-  return messages;
+  return { foodMissing, stepsMissing };
+}
+
+function updateReminderBadge() {
+  const { foodMissing, stepsMissing } = getReminderData();
+  const badge = document.getElementById('reminder-badge');
+  const hasIssue = foodMissing.length > 0 || stepsMissing.length > 0;
+  badge.style.display = hasIssue ? 'inline-flex' : 'none';
+  if (!hasIssue) document.getElementById('reminder-popup').style.display = 'none';
 }
 
 function toggleReminder() {
   const popup = document.getElementById('reminder-popup');
   if (popup.style.display !== 'none') { popup.style.display = 'none'; return; }
-  const messages = getReminderMessages();
-  popup.innerHTML = messages.map(m => `<div style="font-size:12px;font-weight:900;color:var(--red);">${m}</div>`).join('');
+  const { foodMissing, stepsMissing } = getReminderData();
+  let html = '';
+  if (foodMissing.length > 0) {
+    const dates = foodMissing.map(d =>
+      `<span onclick="jumpToDate(${d.offset})" style="cursor:pointer;text-decoration:underline;color:var(--red);margin-right:6px;">${d.label}</span>`
+    ).join('');
+    html += `<div style="font-size:12px;font-weight:900;margin-bottom:6px;">食事未入力: ${dates}</div>`;
+  }
+  if (stepsMissing.length > 0) {
+    const dates = stepsMissing.map(d =>
+      `<span onclick="jumpToDate(${d.offset})" style="cursor:pointer;text-decoration:underline;color:var(--blue);margin-right:6px;">${d.label}</span>`
+    ).join('');
+    html += `<div style="font-size:12px;font-weight:900;">歩数未入力: ${dates}</div>`;
+  }
+  popup.innerHTML = html;
   popup.style.display = 'block';
+}
+
+function jumpToDate(offset) {
+  viewDateOffset = offset;
+  updateHeaderDate();
+  syncWeekToViewDate();
+  render();
+  document.getElementById('reminder-popup').style.display = 'none';
 }
 
 // ===== 今食べられるもの =====
