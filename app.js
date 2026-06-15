@@ -508,6 +508,7 @@
         container.appendChild(div);
       }
     }
+    updateReminderBadge();
   }
 
   function deleteLogItem(idx) {
@@ -1233,6 +1234,36 @@
     };
     reader.readAsText(file);
   }
+
+// ===== リマインダー =====
+function updateReminderBadge() {
+  const messages = getReminderMessages();
+  const badge = document.getElementById('reminder-badge');
+  badge.style.display = messages.length > 0 ? 'inline-flex' : 'none';
+  if (messages.length === 0) document.getElementById('reminder-popup').style.display = 'none';
+}
+
+function getReminderMessages() {
+  const messages = [];
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = dateStrFromDate(d);
+    const label = `${d.getMonth()+1}/${d.getDate()}`;
+    const day = allData[dateStr];
+    if (!day || day.logs.length === 0) messages.push(`${label} 食事入力をお忘れですか？`);
+    if (!day || !day.steps) messages.push(`${label} 歩数入力をお忘れですか？`);
+  }
+  return messages;
+}
+
+function toggleReminder() {
+  const popup = document.getElementById('reminder-popup');
+  if (popup.style.display !== 'none') { popup.style.display = 'none'; return; }
+  const messages = getReminderMessages();
+  popup.innerHTML = messages.map(m => `<div style="font-size:12px;font-weight:900;color:var(--red);">${m}</div>`).join('');
+  popup.style.display = 'block';
+}
 
 // ===== 今食べられるもの =====
 function openCanEatModal() {

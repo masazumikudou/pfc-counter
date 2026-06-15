@@ -214,3 +214,8 @@
 
     /* 目標PFC区切り */
     .settings-divider { font-size: 12px; font-weight: 900; color: var(--muted); border-top: 2px solid var(--cream); padding-top: 12px; margin-top: 4px; margin-bottom: 12px; }
+
+    /* リマインダー */
+    .reminder-badge { background: white; color: var(--red); border: 2px solid white; border-radius: 50%; width: 26px; height: 26px; font-size: 15px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; vertical-align: middle; animation: reminderPulse 1.5s infinite; flex-shrink: 0; }
+    @keyframes reminderPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .reminder-popup { background: white; border: 3px solid var(--ink); border-radius: 14px; padding: 10px 14px; margin-top: 8px; text-align: left; line-height: 2; box-shadow: 0 4px 0 var(--ink); }

@@ -6,7 +6,7 @@
   <title>ミッションダイエット</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 <div class="container">
@@ -17,7 +17,11 @@
 
   <!-- ヘッダー -->
   <div class="header">
-    <h1>ミッションダイエット</h1>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <h1 style="margin:0;">ミッションダイエット</h1>
+      <span class="reminder-badge" id="reminder-badge" style="display:none;" onclick="toggleReminder()">！</span>
+    </div>
+    <div class="reminder-popup" id="reminder-popup" style="display:none;"></div>
     <div class="header-date-nav">
       <button class="date-nav-btn" id="date-prev-btn" onclick="changeViewDate(-1)">‹</button>
       <div class="header-date-label" id="header-date-label">－</div>
@@ -472,6 +476,6 @@
   </div>
 </div>
 
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
